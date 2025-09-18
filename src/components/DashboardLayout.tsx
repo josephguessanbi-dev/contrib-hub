@@ -11,10 +11,12 @@ interface DashboardLayoutProps {
     name: string;
   };
   onLogout: () => void;
+  activeView?: string;
+  onViewChange?: (view: string) => void;
 }
 
-const DashboardLayout = ({ children, user, onLogout }: DashboardLayoutProps) => {
-  const [activeTab, setActiveTab] = useState("dashboard");
+const DashboardLayout = ({ children, user, onLogout, activeView = "dashboard", onViewChange }: DashboardLayoutProps) => {
+  const [activeTab, setActiveTab] = useState(activeView);
 
   const adminMenuItems = [
     { id: "dashboard", label: "Tableau de bord", icon: "📊" },
@@ -54,9 +56,12 @@ const DashboardLayout = ({ children, user, onLogout }: DashboardLayoutProps) => 
           {menuItems.map((item) => (
             <Button
               key={item.id}
-              variant={activeTab === item.id ? "default" : "ghost"}
+              variant={activeView === item.id ? "default" : "ghost"}
               className="w-full justify-start text-left"
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                onViewChange?.(item.id);
+              }}
             >
               <span className="mr-3">{item.icon}</span>
               {item.label}

@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import AuthLayout from "@/components/AuthLayout";
 import LoginForm from "@/components/LoginForm";
 import DashboardLayout from "@/components/DashboardLayout";
 import DashboardStats from "@/components/DashboardStats";
 import TaxpayerForm from "@/components/TaxpayerForm";
 import TaxpayersList from "@/components/TaxpayersList";
+import EmployeeForm from "@/components/EmployeeForm";
+import EmployeesList from "@/components/EmployeesList";
 
 const Index = () => {
   const [user, setUser] = useState<{
@@ -45,6 +48,15 @@ const Index = () => {
       description: "Les informations ont été sauvegardées avec succès",
     });
     setCurrentView("taxpayers");
+  };
+
+  const handleEmployeeSubmit = (data: any) => {
+    console.log("Nouvelle soumission employé:", data);
+    toast({
+      title: "Employé enregistré",
+      description: "L'employé a été ajouté avec succès au système",
+    });
+    setCurrentView("staff");
   };
 
   const handleValidate = (id: string) => {
@@ -118,6 +130,50 @@ const Index = () => {
           <TaxpayerForm onSubmit={handleTaxpayerSubmit} />
         );
 
+      case "staff":
+        return (
+          <div className="p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Gestion du personnel
+                </h1>
+                <p className="text-muted-foreground">
+                  Gérer les employés et leur accès au système
+                </p>
+              </div>
+              {user.role === "admin" && (
+                <Button
+                  onClick={() => setCurrentView("add-employee")}
+                  className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
+                >
+                  Ajouter un employé
+                </Button>
+              )}
+            </div>
+            <EmployeesList
+              userRole={user.role}
+              onEdit={(id) => console.log("Edit employee:", id)}
+              onDelete={(id) => console.log("Delete employee:", id)}
+              onViewDashboard={(employee) => {
+                console.log("View dashboard for:", employee);
+                toast({
+                  title: "Accès au tableau de bord",
+                  description: `Ouverture du dashboard de ${employee.prenom} ${employee.nom}`,
+                });
+              }}
+            />
+          </div>
+        );
+
+      case "add-employee":
+        return (
+          <EmployeeForm 
+            onSubmit={handleEmployeeSubmit}
+            onCancel={() => setCurrentView("staff")}
+          />
+        );
+
       default:
         return (
           <div className="p-6 flex items-center justify-center">
@@ -135,7 +191,12 @@ const Index = () => {
   };
 
   return (
-    <DashboardLayout user={user} onLogout={handleLogout}>
+    <DashboardLayout 
+      user={user} 
+      onLogout={handleLogout}
+      activeView={currentView}
+      onViewChange={setCurrentView}
+    >
       {renderDashboardContent()}
     </DashboardLayout>
   );
