@@ -1,21 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Taxpayer {
   id: string;
-  raisonSociale: string;
+  raison_sociale: string;
   ville: string;
-  gerantNom: string;
-  gerantPrenom: string;
-  contact1: string;
-  status: "en_attente" | "valide" | "rejete";
-  createdAt: string;
-  rccm: string;
-  ncc: string;
+  nom_gerant: string;
+  prenom_gerant: string;
+  contact_1: string;
+  statut: "en_attente" | "valide" | "rejete";
+  created_at: string;
+  rccm: string | null;
+  ncc: string | null;
+  commune: string;
+  quartier: string | null;
+  contact_2: string | null;
 }
 
 interface TaxpayersListProps {
@@ -29,46 +34,139 @@ interface TaxpayersListProps {
 const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: TaxpayersListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [taxpayers, setTaxpayers] = useState<Taxpayer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Données mockées pour la démo
-  const mockTaxpayers: Taxpayer[] = [
-    {
-      id: "1",
-      raisonSociale: "SARL TECH SOLUTIONS",
-      ville: "Brazzaville",
-      gerantNom: "MBEMBA",
-      gerantPrenom: "Jean",
-      contact1: "+242 06 123 4567",
-      status: "en_attente",
-      createdAt: "2024-01-15T10:30:00Z",
-      rccm: "CG-BZV-01-B-12345",
-      ncc: "M123456789"
-    },
-    {
-      id: "2",
-      raisonSociale: "ENTREPRISE MOKOKO",
-      ville: "Pointe-Noire",
-      gerantNom: "MATONDO",
-      gerantPrenom: "Marie",
-      contact1: "+242 06 987 6543",
-      status: "valide",
-      createdAt: "2024-01-10T14:20:00Z",
-      rccm: "CG-PNR-01-B-67890",
-      ncc: "M987654321"
-    },
-    {
-      id: "3",
-      raisonSociale: "COMMERCE GENERAL NKOUKOU",
-      ville: "Dolisie",
-      gerantNom: "NKOUKOU",
-      gerantPrenom: "Paul",
-      contact1: "+242 06 555 1234",
-      status: "rejete",
-      createdAt: "2024-01-05T09:15:00Z",
-      rccm: "CG-DOL-01-B-11111",
-      ncc: "M111222333"
+  useEffect(() => {
+    const fetchTaxpayers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('contribuables')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger les contribuables",
+            variant: "destructive"
+          });
+        } else {
+          setTaxpayers(data || []);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des contribuables:', error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors du chargement",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTaxpayers();
+  }, [toast]);
+
+  const handleValidate = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('contribuables')
+        .update({ statut: 'valide' })
+        .eq('id', id);
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de valider le contribuable",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Validé",
+          description: "Le contribuable a été validé"
+        });
+        // Refresh data
+        setTaxpayers(prev => prev.map(t => t.id === id ? { ...t, statut: 'valide' } : t));
+        onValidate?.(id);
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue",
+        variant: "destructive"
+      });
     }
-  ];
+  };
+
+  const handleReject = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('contribuables')
+        .update({ statut: 'rejete' })
+        .eq('id', id);
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de rejeter le contribuable",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Rejeté",
+          description: "Le contribuable a été rejeté",
+          variant: "destructive"
+        });
+        // Refresh data
+        setTaxpayers(prev => prev.map(t => t.id === id ? { ...t, statut: 'rejete' } : t));
+        onReject?.(id);
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce contribuable ?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('contribuables')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de supprimer le contribuable",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Supprimé",
+          description: "Le contribuable a été supprimé"
+        });
+        // Refresh data
+        setTaxpayers(prev => prev.filter(t => t.id !== id));
+        onDelete?.(id);
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue",
+        variant: "destructive"
+      });
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -83,13 +181,21 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
     }
   };
 
-  const filteredTaxpayers = mockTaxpayers.filter(taxpayer => {
-    const matchesSearch = taxpayer.raisonSociale.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         taxpayer.gerantNom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredTaxpayers = taxpayers.filter(taxpayer => {
+    const matchesSearch = taxpayer.raison_sociale.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         taxpayer.nom_gerant.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          taxpayer.ville.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || taxpayer.status === statusFilter;
+    const matchesStatus = statusFilter === "all" || taxpayer.statut === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -121,12 +227,12 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle className="text-lg">{taxpayer.raisonSociale}</CardTitle>
+                  <CardTitle className="text-lg">{taxpayer.raison_sociale}</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Gérant: {taxpayer.gerantPrenom} {taxpayer.gerantNom}
+                    Gérant: {taxpayer.prenom_gerant} {taxpayer.nom_gerant}
                   </p>
                 </div>
-                {getStatusBadge(taxpayer.status)}
+                {getStatusBadge(taxpayer.statut)}
               </div>
             </CardHeader>
             <CardContent>
@@ -137,33 +243,33 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Contact</p>
-                  <p className="font-medium">{taxpayer.contact1}</p>
+                  <p className="font-medium">{taxpayer.contact_1}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">RCCM</p>
-                  <p className="font-medium">{taxpayer.rccm}</p>
+                  <p className="font-medium">{taxpayer.rccm || 'Non renseigné'}</p>
                 </div>
               </div>
               
               <div className="flex flex-wrap gap-2 justify-between items-center">
                 <div className="text-xs text-muted-foreground">
-                  Enregistré le {new Date(taxpayer.createdAt).toLocaleDateString("fr-FR")}
+                  Enregistré le {new Date(taxpayer.created_at).toLocaleDateString("fr-FR")}
                 </div>
                 
                 <div className="flex gap-2">
-                  {userRole === "admin" && taxpayer.status === "en_attente" && (
+                  {userRole === "admin" && taxpayer.statut === "en_attente" && (
                     <>
                       <Button 
                         size="sm" 
                         className="bg-success text-success-foreground hover:bg-success/90"
-                        onClick={() => onValidate?.(taxpayer.id)}
+                        onClick={() => handleValidate(taxpayer.id)}
                       >
                         Valider
                       </Button>
                       <Button 
                         size="sm" 
                         variant="destructive"
-                        onClick={() => onReject?.(taxpayer.id)}
+                        onClick={() => handleReject(taxpayer.id)}
                       >
                         Rejeter
                       </Button>
@@ -182,7 +288,7 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
                     <Button 
                       size="sm" 
                       variant="outline"
-                      onClick={() => onDelete?.(taxpayer.id)}
+                      onClick={() => handleDelete(taxpayer.id)}
                     >
                       Supprimer
                     </Button>
