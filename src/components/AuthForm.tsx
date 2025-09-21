@@ -111,123 +111,49 @@ const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
         <CardTitle className="text-2xl font-bold text-foreground">
           TaxContrib
         </CardTitle>
-        <p className="text-muted-foreground">Système de gestion des contribuables</p>
+        <p className="text-muted-foreground">Connexion Admin/Staff</p>
       </CardHeader>
       
       <CardContent>
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Connexion</TabsTrigger>
-            <TabsTrigger value="signup">Inscription</TabsTrigger>
-          </TabsList>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="votre@email.com"
+              value={loginForm.email}
+              onChange={(e) => setLoginForm(prev => ({...prev, email: e.target.value}))}
+              required
+            />
+          </div>
           
-          <TabsContent value="login" className="space-y-4 mt-6">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="votre@email.com"
-                  value={loginForm.email}
-                  onChange={(e) => setLoginForm(prev => ({...prev, email: e.target.value}))}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Votre mot de passe"
-                  value={loginForm.password}
-                  onChange={(e) => setLoginForm(prev => ({...prev, password: e.target.value}))}
-                  required
-                />
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-primary to-primary/90"
-                disabled={isLoading}
-              >
-                {isLoading ? "Connexion..." : "Se connecter"}
-              </Button>
-            </form>
-            
-            <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">Compte admin par défaut:</p>
-              <p className="text-xs font-mono">ninopaket@gmail.com</p>
-              <p className="text-xs font-mono">32722260</p>
-            </div>
-          </TabsContent>
+          <div className="space-y-2">
+            <Label htmlFor="password">Mot de passe</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Votre mot de passe"
+              value={loginForm.password}
+              onChange={(e) => setLoginForm(prev => ({...prev, password: e.target.value}))}
+              required
+            />
+          </div>
           
-          <TabsContent value="signup" className="space-y-4 mt-6">
-            <form onSubmit={handleSignup} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-nom">Nom complet</Label>
-                <Input
-                  id="signup-nom"
-                  type="text"
-                  placeholder="Votre nom complet"
-                  value={signupForm.nom}
-                  onChange={(e) => setSignupForm(prev => ({...prev, nom: e.target.value}))}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="signup-numeroTravail">Numéro de travail</Label>
-                <Input
-                  id="signup-numeroTravail"
-                  type="text"
-                  placeholder="EMP001"
-                  value={signupForm.numeroTravail}
-                  onChange={(e) => setSignupForm(prev => ({...prev, numeroTravail: e.target.value}))}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="votre@email.com"
-                  value={signupForm.email}
-                  onChange={(e) => setSignupForm(prev => ({...prev, email: e.target.value}))}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Mot de passe</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  placeholder="Minimum 6 caractères"
-                  value={signupForm.password}
-                  onChange={(e) => setSignupForm(prev => ({...prev, password: e.target.value}))}
-                  required
-                />
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-primary to-primary/90"
-                disabled={isLoading}
-              >
-                {isLoading ? "Inscription..." : "S'inscrire"}
-              </Button>
-              
-              <div className="flex items-center justify-center">
-                <Badge variant="secondary" className="text-xs">
-                  Nouveau personnel seulement
-                </Badge>
-              </div>
-            </form>
-          </TabsContent>
-        </Tabs>
+          <Button 
+            type="submit" 
+            className="w-full bg-gradient-to-r from-primary to-primary/90"
+            disabled={isLoading}
+          >
+            {isLoading ? "Connexion..." : "Se connecter"}
+          </Button>
+        </form>
+        
+        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+          <p className="text-sm text-muted-foreground mb-2">Compte admin par défaut:</p>
+          <p className="text-xs font-mono">ninopaket@gmail.com</p>
+          <p className="text-xs font-mono">32722260</p>
+        </div>
       </CardContent>
     </Card>
   );
