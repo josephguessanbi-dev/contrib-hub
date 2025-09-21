@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import TaxpayerForm from "./TaxpayerForm";
 import TaxpayersList from "./TaxpayersList";
+import StaffForm from "./StaffForm";
 import type { User } from '@supabase/supabase-js';
 
 interface UserProfile {
@@ -22,7 +23,7 @@ interface StaffDashboardProps {
 }
 
 const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
-  const [activeView, setActiveView] = useState<"overview" | "taxpayers" | "add-taxpayer">("overview");
+  const [activeView, setActiveView] = useState<"overview" | "taxpayers" | "add-taxpayer" | "staff" | "add-staff">("overview");
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -95,6 +96,22 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'enregistrement",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleStaffSubmit = async (data: any) => {
+    try {
+      toast({
+        title: "Agent créé",
+        description: "L'agent du staff a été ajouté avec succès"
+      });
+      setActiveView("staff");
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue",
         variant: "destructive"
       });
     }
@@ -182,6 +199,24 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
             >
               ➕ Nouveau contribuable
             </Button>
+            {userProfile?.role === 'admin' && (
+              <Button
+                variant={activeView === "staff" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveView("staff")}
+              >
+                👨‍💼 Staff
+              </Button>
+            )}
+            {userProfile?.role === 'admin' && (
+              <Button
+                variant={activeView === "add-staff" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveView("add-staff")}
+              >
+                ➕ Ajouter Staff
+              </Button>
+            )}
           </div>
         </nav>
       </header>
@@ -233,6 +268,23 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
                   </div>
                 </CardContent>
               </Card>
+
+              {userProfile?.role === 'admin' && (
+                <Card className="cursor-pointer hover:shadow-lg transition-all duration-200" 
+                      onClick={() => setActiveView("add-staff")}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                        <span className="text-white text-2xl">👨‍💼</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground">Ajouter un agent</h3>
+                        <p className="text-sm text-muted-foreground">Créer un compte staff</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         )}
@@ -254,6 +306,40 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
               onReject={(id) => toast({ title: "Rejeté", description: "Contribuable rejeté", variant: "destructive" })}
               onEdit={(id) => console.log("Edit:", id)}
               onDelete={(id) => console.log("Delete:", id)}
+            />
+          </div>
+        )}
+
+        {activeView === "staff" && userProfile?.role === 'admin' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Gestion du Staff</h2>
+                <p className="text-muted-foreground">Liste des agents et administrateurs</p>
+              </div>
+              <Button onClick={() => setActiveView("add-staff")} className="bg-gradient-to-r from-primary to-primary/90">
+                ➕ Ajouter un agent
+              </Button>
+            </div>
+            {/* Ici sera ajoutée la liste du staff */}
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground">Liste du staff à implémenter</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeView === "add-staff" && userProfile?.role === 'admin' && (
+          <div className="max-w-2xl">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-foreground">Ajouter un Agent du Staff</h2>
+              <p className="text-muted-foreground">Créer un nouveau compte pour un agent ou administrateur</p>
+            </div>
+            <StaffForm 
+              onSubmit={handleStaffSubmit}
+              onCancel={() => setActiveView("staff")}
+              organisationId={userProfile?.organisation_id || ''}
             />
           </div>
         )}
