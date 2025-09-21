@@ -321,12 +321,6 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
                 ➕ Ajouter un agent
               </Button>
             </div>
-            {/* Ici sera ajoutée la liste du staff */}
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">Liste du staff à implémenter</p>
-              </CardContent>
-            </Card>
           </div>
         )}
 
