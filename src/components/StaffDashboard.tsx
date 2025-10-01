@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import TaxpayerForm from "./TaxpayerForm";
 import TaxpayersList from "./TaxpayersList";
 import StaffForm from "./StaffForm";
+import EmployeesList from "./EmployeesList";
 import type { User } from '@supabase/supabase-js';
 
 interface UserProfile {
@@ -321,6 +322,12 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
                 ➕ Ajouter un agent
               </Button>
             </div>
+            <EmployeesList
+              userRole="admin"
+              onEdit={(id) => console.log("Edit:", id)}
+              onDelete={(id) => console.log("Delete:", id)}
+              onViewDashboard={(employee) => console.log("View dashboard:", employee)}
+            />
           </div>
         )}
 

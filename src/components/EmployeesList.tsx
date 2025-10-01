@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,19 +6,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Employee {
   id: string;
   nom: string;
-  prenom: string;
   email: string;
-  telephone: string;
-  numeroTravail: string;
+  numeroTravail: string | null;
   role: "admin" | "personnel";
-  departement: string;
   statut: string;
-  dateEmbauche: string;
-  dateCreation: string;
+  created_at: string;
 }
 
 interface EmployeesListProps {
@@ -32,62 +30,92 @@ const EmployeesList = ({ userRole, onEdit, onDelete, onViewDashboard }: Employee
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("tous");
   const [roleFilter, setRoleFilter] = useState("tous");
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Données simulées - à remplacer par des données réelles
-  const [employees] = useState<Employee[]>([
-    {
-      id: "1",
-      nom: "Dubois",
-      prenom: "Jean",
-      email: "jean.dubois@taxcontrib.com",
-      telephone: "+33 1 23 45 67 89",
-      numeroTravail: "EMP001",
-      role: "admin",
-      departement: "Direction",
-      statut: "actif",
-      dateEmbauche: "2023-01-15",
-      dateCreation: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      nom: "Martin",
-      prenom: "Sophie",
-      email: "sophie.martin@taxcontrib.com",
-      telephone: "+33 1 23 45 67 90",
-      numeroTravail: "EMP002",
-      role: "personnel",
-      departement: "Contributions",
-      statut: "actif",
-      dateEmbauche: "2023-03-10",
-      dateCreation: new Date().toISOString(),
-    },
-    {
-      id: "3",
-      nom: "Leroy",
-      prenom: "Pierre",
-      email: "pierre.leroy@taxcontrib.com",
-      telephone: "+33 1 23 45 67 91",
-      numeroTravail: "EMP003",
-      role: "personnel",
-      departement: "Contrôle",
-      statut: "inactif",
-      dateEmbauche: "2022-11-20",
-      dateCreation: new Date().toISOString(),
-    },
-  ]);
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      setIsLoading(true);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          user_id,
+          nom,
+          numero_travail,
+          organisation_id,
+          created_at
+        `);
+
+      if (profilesError) throw profilesError;
+
+      if (profiles) {
+        const employeesWithRoles = await Promise.all(
+          profiles.map(async (profile) => {
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', profile.user_id)
+              .eq('organisation_id', profile.organisation_id)
+              .single();
+
+            const { data: authUser } = await supabase.auth.admin.getUserById(profile.user_id);
+
+            return {
+              id: profile.id,
+              nom: profile.nom,
+              email: authUser?.user?.email || 'N/A',
+              numeroTravail: profile.numero_travail,
+              role: (roleData?.role as "admin" | "personnel") || 'personnel',
+              statut: 'actif',
+              created_at: profile.created_at
+            };
+          })
+        );
+
+        setEmployees(employeesWithRoles);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des employés:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger la liste des employés",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredEmployees = employees.filter(employee => {
     const matchesSearch = 
       employee.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.numeroTravail.toLowerCase().includes(searchTerm.toLowerCase());
+      (employee.numeroTravail && employee.numeroTravail.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter === "tous" || employee.statut === statusFilter;
     const matchesRole = roleFilter === "tous" || employee.role === roleFilter;
 
     return matchesSearch && matchesStatus && matchesRole;
   });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-8">
+          <div className="flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <span className="ml-3 text-muted-foreground">Chargement...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const getStatusBadge = (statut: string) => {
     switch (statut) {
@@ -167,12 +195,12 @@ const EmployeesList = ({ userRole, onEdit, onDelete, onViewDashboard }: Employee
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Employé</TableHead>
+                <TableHead>Nom</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>N° Travail</TableHead>
                 <TableHead>Rôle</TableHead>
-                <TableHead>Département</TableHead>
                 <TableHead>Statut</TableHead>
-                <TableHead>Date embauche</TableHead>
+                <TableHead>Date création</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -192,44 +220,39 @@ const EmployeesList = ({ userRole, onEdit, onDelete, onViewDashboard }: Employee
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
                           <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                            {employee.prenom.charAt(0)}{employee.nom.charAt(0)}
+                            {employee.nom.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <div className="font-medium text-foreground">
-                            {employee.prenom} {employee.nom}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {employee.email}
-                          </div>
+                        <div className="font-medium text-foreground">
+                          {employee.nom}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <code className="bg-muted px-2 py-1 rounded text-sm">
-                        {employee.numeroTravail}
-                      </code>
+                      <div className="text-sm text-muted-foreground">
+                        {employee.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {employee.numeroTravail ? (
+                        <code className="bg-muted px-2 py-1 rounded text-sm">
+                          {employee.numeroTravail}
+                        </code>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {getRoleBadge(employee.role)}
                     </TableCell>
-                    <TableCell>{employee.departement || "-"}</TableCell>
                     <TableCell>
                       {getStatusBadge(employee.statut)}
                     </TableCell>
                     <TableCell>
-                      {employee.dateEmbauche ? 
-                        new Date(employee.dateEmbauche).toLocaleDateString('fr-FR') : "-"}
+                      {new Date(employee.created_at).toLocaleDateString('fr-FR')}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => onViewDashboard?.(employee)}
-                        >
-                          Dashboard
-                        </Button>
                         {userRole === "admin" && (
                           <>
                             <Button
