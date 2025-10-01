@@ -39,12 +39,21 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
     if (e.target.files) {
       setFormData({
         ...formData,
         documents: [...formData.documents, ...Array.from(e.target.files)],
       });
     }
+  };
+
+  const removeDocument = (index: number) => {
+    const newDocuments = formData.documents.filter((_, i) => i !== index);
+    setFormData({
+      ...formData,
+      documents: newDocuments,
+    });
   };
 
   return (
@@ -269,10 +278,32 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
                 multiple
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                 onChange={handleFileChange}
+                onClick={(e) => e.stopPropagation()}
               />
               {formData.documents.length > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  {formData.documents.length} document(s) sélectionné(s)
+                <div className="mt-3 space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    {formData.documents.length} document(s) sélectionné(s):
+                  </p>
+                  <div className="space-y-2">
+                    {formData.documents.map((doc, index) => (
+                      <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
+                        <span className="text-sm text-foreground truncate flex-1">{doc.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            removeDocument(index);
+                          }}
+                          className="text-destructive hover:text-destructive ml-2"
+                        >
+                          Supprimer
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
