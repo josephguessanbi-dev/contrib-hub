@@ -43,12 +43,11 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
       rccm: formData.rccm,
       ncc: formData.ncc,
       contact_1: formData.contact1,
-      contact_2: formData.contact2,
+      contact_2: formData.contact2 || null,
       latitude: formData.latitude ? parseFloat(formData.latitude) : null,
       longitude: formData.longitude ? parseFloat(formData.longitude) : null,
-      commentaire: formData.commentaire,
+      commentaire: formData.commentaire || null,
       statut: "en_attente",
-      documents: formData.documents, // To be handled by parent component
     };
     
     onSubmit(mappedData);
