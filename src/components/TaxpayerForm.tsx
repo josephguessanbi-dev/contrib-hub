@@ -31,15 +31,30 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      ...formData,
-      createdAt: new Date().toISOString(),
-      status: "en_attente",
-    });
+    
+    // Map form data to database column names
+    const mappedData = {
+      raison_sociale: formData.raisonSociale,
+      ville: formData.ville,
+      commune: formData.commune,
+      quartier: formData.quartier,
+      nom_gerant: formData.gerantNom,
+      prenom_gerant: formData.gerantPrenom,
+      rccm: formData.rccm,
+      ncc: formData.ncc,
+      contact_1: formData.contact1,
+      contact_2: formData.contact2,
+      latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+      longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+      commentaire: formData.commentaire,
+      statut: "en_attente",
+      documents: formData.documents, // To be handled by parent component
+    };
+    
+    onSubmit(mappedData);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
     if (e.target.files) {
       setFormData({
         ...formData,
