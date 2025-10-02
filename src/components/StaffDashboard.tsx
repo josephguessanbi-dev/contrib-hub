@@ -138,9 +138,9 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card border-b border-border">
-        <div className="px-6 py-4 flex justify-between items-center">
+        <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center shrink-0">
               <span className="text-primary-foreground font-bold">TC</span>
             </div>
             <div>
@@ -151,8 +151,8 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+            <div className="hidden sm:flex items-center space-x-3">
               <Avatar>
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {userProfile?.nom.charAt(0).toUpperCase() || 'U'}
@@ -170,19 +170,20 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
                 </div>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
+            <Button variant="outline" size="sm" onClick={handleLogout} className="ml-auto sm:ml-0">
               Déconnexion
             </Button>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="px-6 pb-4">
-          <div className="flex space-x-4">
+        <nav className="px-4 sm:px-6 pb-4">
+          <div className="flex space-x-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
             <Button
               variant={activeView === "overview" ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveView("overview")}
+              className="shrink-0"
             >
               📊 Accueil
             </Button>
@@ -190,6 +191,7 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
               variant={activeView === "taxpayers" ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveView("taxpayers")}
+              className="shrink-0"
             >
               👥 Contribuables
             </Button>
@@ -197,14 +199,16 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
               variant={activeView === "add-taxpayer" ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveView("add-taxpayer")}
+              className="shrink-0"
             >
-              ➕ Nouveau contribuable
+              ➕ Nouveau
             </Button>
             {userProfile?.role === 'admin' && (
               <Button
                 variant={activeView === "staff" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setActiveView("staff")}
+                className="shrink-0"
               >
                 👨‍💼 Staff
               </Button>
@@ -214,8 +218,9 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
                 variant={activeView === "add-staff" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setActiveView("add-staff")}
+                className="shrink-0"
               >
-                ➕ Ajouter Staff
+                ➕ Agent
               </Button>
             )}
           </div>
@@ -223,7 +228,7 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
       </header>
 
       {/* Main Content */}
-      <main className="p-6">
+      <main className="p-4 sm:p-6">
         {activeView === "overview" && (
           <div className="space-y-6">
             <div>
@@ -239,7 +244,7 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <Card className="cursor-pointer hover:shadow-lg transition-all duration-200" 
                     onClick={() => setActiveView("add-taxpayer")}>
                 <CardContent className="p-6">
@@ -346,11 +351,7 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
         )}
 
         {activeView === "add-taxpayer" && (
-          <div className="max-w-2xl">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-foreground">Nouveau Contribuable</h2>
-              <p className="text-muted-foreground">Enregistrer un nouveau contribuable dans le système</p>
-            </div>
+          <div className="w-full">
             <TaxpayerForm onSubmit={handleTaxpayerSubmit} />
           </div>
         )}

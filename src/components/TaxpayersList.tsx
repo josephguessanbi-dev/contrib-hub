@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import TaxpayerDetail from "./TaxpayerDetail";
 
 interface Taxpayer {
   id: string;
@@ -36,6 +37,7 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [taxpayers, setTaxpayers] = useState<Taxpayer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTaxpayerId, setSelectedTaxpayerId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -279,9 +281,9 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
                   <Button 
                     size="sm" 
                     variant="outline"
-                    onClick={() => onEdit?.(taxpayer.id)}
+                    onClick={() => setSelectedTaxpayerId(taxpayer.id)}
                   >
-                    Modifier
+                    Voir détails
                   </Button>
                   
                   {userRole === "admin" && (
@@ -306,6 +308,25 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
             <p className="text-muted-foreground">Aucun contribuable trouvé</p>
           </CardContent>
         </Card>
+      )}
+
+      {selectedTaxpayerId && (
+        <TaxpayerDetail
+          taxpayerId={selectedTaxpayerId}
+          isOpen={!!selectedTaxpayerId}
+          onClose={() => setSelectedTaxpayerId(null)}
+          onUpdate={() => {
+            // Refresh the list
+            const fetchTaxpayers = async () => {
+              const { data } = await supabase
+                .from('contribuables')
+                .select('*')
+                .order('created_at', { ascending: false });
+              if (data) setTaxpayers(data);
+            };
+            fetchTaxpayers();
+          }}
+        />
       )}
     </div>
   );
