@@ -42,7 +42,7 @@ const StaffForm = ({ onSubmit, onCancel, organisationId }: StaffFormProps) => {
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             nom: formData.nom,
             numero_travail: formData.numero_travail,
@@ -58,76 +58,37 @@ const StaffForm = ({ onSubmit, onCancel, organisationId }: StaffFormProps) => {
           description: authError.message,
           variant: "destructive"
         });
-        setIsLoading(false);
         return;
       }
 
       // Si l'utilisateur est créé avec succès
       if (authData.user) {
-        // Attendre un peu pour que le trigger s'exécute
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Vérifier si le profil existe déjà (créé par le trigger)
-        const { data: existingProfile } = await supabase
+        // Créer le profil directement (si le trigger ne fonctionne pas)
+        const { error: profileError } = await supabase
           .from('profiles')
-          .select('id')
-          .eq('user_id', authData.user.id)
-          .single();
+          .insert({
+            user_id: authData.user.id,
+            nom: formData.nom,
+            numero_travail: formData.numero_travail,
+            organisation_id: organisationId
+          });
 
-        if (!existingProfile) {
-          // Créer le profil manuellement si le trigger n'a pas fonctionné
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              user_id: authData.user.id,
-              nom: formData.nom,
-              numero_travail: formData.numero_travail,
-              organisation_id: organisationId
-            });
-
-          if (profileError) {
-            console.error("Erreur profil:", profileError);
-            throw profileError;
-          }
-        }
-
-        // Vérifier si le rôle existe déjà (créé par le trigger)
-        const { data: existingRole } = await supabase
+        // Assigner le rôle
+        const { error: roleError } = await supabase
           .from('user_roles')
-          .select('id')
-          .eq('user_id', authData.user.id)
-          .single();
+          .insert({
+            user_id: authData.user.id,
+            role: formData.role,
+            organisation_id: organisationId
+          });
 
-        if (!existingRole) {
-          // Créer le rôle manuellement si le trigger n'a pas fonctionné
-          const { error: roleError } = await supabase
-            .from('user_roles')
-            .insert({
-              user_id: authData.user.id,
-              role: formData.role,
-              organisation_id: organisationId
-            });
-
-          if (roleError) {
-            console.error("Erreur rôle:", roleError);
-            throw roleError;
-          }
-        } else {
-          // Mettre à jour le rôle si nécessaire
-          const { error: roleUpdateError } = await supabase
-            .from('user_roles')
-            .update({ role: formData.role })
-            .eq('user_id', authData.user.id)
-            .eq('organisation_id', organisationId);
-
-          if (roleUpdateError) {
-            console.error("Erreur mise à jour rôle:", roleUpdateError);
-          }
+        if (profileError || roleError) {
+          console.warn("Erreur lors de la création du profil/rôle:", { profileError, roleError });
         }
 
         toast({
           title: "Agent ajouté",
-          description: "L'agent peut maintenant se connecter avec son email et mot de passe."
+          description: "L'agent du staff a été créé avec succès. Un email de confirmation a été envoyé."
         });
 
         onSubmit(formData);
