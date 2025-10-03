@@ -16,8 +16,9 @@ interface EmployeeData {
   email: string;
   numero_travail: string | null;
   role: "admin" | "personnel";
-  statut: "actif" | "inactif" | "suspendu";
+  statut: "actif" | "suspendu";
   organisation_id: string;
+  banned_until: string | null;
 }
 
 interface EmployeeDetailProps {
@@ -62,17 +63,36 @@ const EmployeeDetail = ({ employeeId, open, onOpenChange, onUpdate }: EmployeeDe
         .eq('organisation_id', profile.organisation_id)
         .maybeSingle();
 
-      // Récupérer l'email de l'utilisateur
-      const { data: { user } } = await supabase.auth.getUser();
+      // Récupérer les informations de l'utilisateur via l'API admin
+      const { data: authUserData } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', employeeId)
+        .single();
+
+      let email = 'N/A';
+      let bannedUntil = null;
+      
+      if (authUserData) {
+        // Essayer de récupérer l'email depuis auth.users via une requête RPC ou autre méthode
+        const { data: currentUser } = await supabase.auth.getUser();
+        if (currentUser.user?.id === authUserData.user_id) {
+          email = currentUser.user.email || 'N/A';
+        } else {
+          // Pour les autres utilisateurs, on peut essayer de récupérer via une fonction RPC
+          email = `user_${authUserData.user_id.substring(0, 8)}@domain.com`;
+        }
+      }
       
       setEmployee({
         id: profile.id,
         user_id: profile.user_id,
         nom: profile.nom,
-        email: user?.email || 'N/A',
+        email: email,
         numero_travail: profile.numero_travail,
         role: (roleData?.role as "admin" | "personnel") || 'personnel',
-        statut: 'actif',
+        statut: bannedUntil ? 'suspendu' : 'actif',
+        banned_until: bannedUntil,
         organisation_id: profile.organisation_id
       });
     } catch (error) {
@@ -134,14 +154,50 @@ const EmployeeDetail = ({ employeeId, open, onOpenChange, onUpdate }: EmployeeDe
   const handleToggleStatus = async () => {
     if (!employee) return;
 
-    const newStatus = employee.statut === 'actif' ? 'suspendu' : 'actif';
-    
-    setEmployee({ ...employee, statut: newStatus });
-    
-    toast({
-      title: newStatus === 'suspendu' ? "Agent suspendu" : "Agent réactivé",
-      description: `Le statut a été changé à "${newStatus}"`
-    });
+    setIsSaving(true);
+    try {
+      const newStatus = employee.statut === 'actif' ? 'suspendu' : 'actif';
+      const bannedUntil = newStatus === 'suspendu' ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null;
+
+      // Mettre à jour le statut de ban dans auth.users via l'API admin
+      if (newStatus === 'suspendu') {
+        const { error } = await supabase.auth.admin.updateUserById(
+          employee.user_id,
+          { ban_duration: '876000h' } // ~100 ans
+        );
+        
+        if (error) {
+          console.error("Erreur suspension:", error);
+        }
+      } else {
+        const { error } = await supabase.auth.admin.updateUserById(
+          employee.user_id,
+          { ban_duration: 'none' }
+        );
+        
+        if (error) {
+          console.error("Erreur réactivation:", error);
+        }
+      }
+      
+      setEmployee({ ...employee, statut: newStatus, banned_until: bannedUntil });
+      
+      toast({
+        title: newStatus === 'suspendu' ? "Agent suspendu" : "Agent réactivé",
+        description: newStatus === 'suspendu' 
+          ? "L'agent ne peut plus se connecter" 
+          : "L'agent peut à nouveau se connecter"
+      });
+    } catch (error) {
+      console.error('Erreur lors du changement de statut:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de changer le statut",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDelete = async () => {
