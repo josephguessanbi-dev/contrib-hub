@@ -9,6 +9,7 @@ import TaxpayerForm from "./TaxpayerForm";
 import TaxpayersList from "./TaxpayersList";
 import StaffForm from "./StaffForm";
 import EmployeesList from "./EmployeesList";
+import EmployeeDetail from "./EmployeeDetail";
 import type { User } from '@supabase/supabase-js';
 
 interface UserProfile {
@@ -27,6 +28,9 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
   const [activeView, setActiveView] = useState<"overview" | "taxpayers" | "add-taxpayer" | "staff" | "add-staff">("overview");
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [showEmployeeDetail, setShowEmployeeDetail] = useState(false);
+  const [refreshEmployees, setRefreshEmployees] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -121,6 +125,15 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     onLogout();
+  };
+
+  const handleEditEmployee = (employeeId: string) => {
+    setSelectedEmployeeId(employeeId);
+    setShowEmployeeDetail(true);
+  };
+
+  const handleEmployeeUpdate = () => {
+    setRefreshEmployees(prev => prev + 1);
   };
 
   if (isLoading) {
@@ -329,9 +342,14 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
             </div>
             <EmployeesList
               userRole="admin"
-              onEdit={(id) => console.log("Edit:", id)}
-              onDelete={(id) => console.log("Delete:", id)}
-              onViewDashboard={(employee) => console.log("View dashboard:", employee)}
+              onEdit={handleEditEmployee}
+              onRefresh={() => setRefreshEmployees(prev => prev + 1)}
+            />
+            <EmployeeDetail
+              employeeId={selectedEmployeeId}
+              open={showEmployeeDetail}
+              onOpenChange={setShowEmployeeDetail}
+              onUpdate={handleEmployeeUpdate}
             />
           </div>
         )}

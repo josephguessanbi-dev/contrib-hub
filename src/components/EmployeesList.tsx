@@ -22,11 +22,10 @@ interface Employee {
 interface EmployeesListProps {
   userRole: "admin" | "personnel";
   onEdit?: (id: string) => void;
-  onDelete?: (id: string) => void;
-  onViewDashboard?: (employee: Employee) => void;
+  onRefresh?: () => void;
 }
 
-const EmployeesList = ({ userRole, onEdit, onDelete, onViewDashboard }: EmployeesListProps) => {
+const EmployeesList = ({ userRole, onEdit, onRefresh }: EmployeesListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("tous");
   const [roleFilter, setRoleFilter] = useState("tous");
@@ -37,6 +36,12 @@ const EmployeesList = ({ userRole, onEdit, onDelete, onViewDashboard }: Employee
   useEffect(() => {
     fetchEmployees();
   }, []);
+
+  useEffect(() => {
+    if (onRefresh) {
+      fetchEmployees();
+    }
+  }, [onRefresh]);
 
   const fetchEmployees = async () => {
     try {
@@ -254,23 +259,13 @@ const EmployeesList = ({ userRole, onEdit, onDelete, onViewDashboard }: Employee
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
                         {userRole === "admin" && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => onEdit?.(employee.id)}
-                            >
-                              Modifier
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => onDelete?.(employee.id)}
-                            >
-                              Supprimer
-                            </Button>
-                          </>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => onEdit?.(employee.id)}
+                          >
+                            Modifier
+                          </Button>
                         )}
                       </div>
                     </TableCell>
