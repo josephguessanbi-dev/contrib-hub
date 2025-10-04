@@ -48,6 +48,7 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
       longitude: formData.longitude ? parseFloat(formData.longitude) : null,
       commentaire: formData.commentaire || null,
       statut: "en_attente",
+      documents: formData.documents, // Include documents
     };
     
     onSubmit(mappedData);

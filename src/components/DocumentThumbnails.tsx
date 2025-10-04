@@ -49,11 +49,19 @@ const DocumentThumbnails = ({ contribuableId, className = "" }: DocumentThumbnai
     }
   };
 
-  const handleDocumentClick = (doc: Document) => {
+  const handleDocumentClick = async (doc: Document) => {
     setSelectedDocument(doc);
-    // Si c'est une image, on pourrait charger l'URL depuis le storage
-    // Pour l'instant, on affiche juste le chemin
-    setImageUrl(doc.chemin_fichier);
+    
+    // Charger l'URL depuis le storage pour les images
+    if (isImageFile(doc.nom_fichier)) {
+      const { data } = supabase.storage
+        .from('contribuables-documents')
+        .getPublicUrl(doc.chemin_fichier);
+      
+      if (data) {
+        setImageUrl(data.publicUrl);
+      }
+    }
   };
 
   const getFileIcon = (fileName: string, docType: string) => {
@@ -139,15 +147,20 @@ const DocumentThumbnails = ({ contribuableId, className = "" }: DocumentThumbnai
               <div className="flex flex-col items-center space-y-4">
                 {isImageFile(selectedDocument.nom_fichier) ? (
                   <div className="w-full flex items-center justify-center bg-muted/20 rounded-lg p-4">
-                    <div className="text-center">
-                      <ImageIcon className="w-24 h-24 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-sm text-muted-foreground">
-                        Aperçu de l'image non disponible
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Chemin: {selectedDocument.chemin_fichier}
-                      </p>
-                    </div>
+                    {imageUrl ? (
+                      <img 
+                        src={imageUrl} 
+                        alt={selectedDocument.nom_fichier}
+                        className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                      />
+                    ) : (
+                      <div className="text-center">
+                        <ImageIcon className="w-24 h-24 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-sm text-muted-foreground">
+                          Chargement de l'image...
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="w-full flex items-center justify-center bg-muted/20 rounded-lg p-8">
@@ -157,7 +170,7 @@ const DocumentThumbnails = ({ contribuableId, className = "" }: DocumentThumbnai
                         Type: {selectedDocument.type_document}
                       </p>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Chemin: {selectedDocument.chemin_fichier}
+                        Nom: {selectedDocument.nom_fichier}
                       </p>
                       {selectedDocument.taille_fichier && (
                         <p className="text-xs text-muted-foreground mt-1">

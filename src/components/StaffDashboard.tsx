@@ -76,28 +76,66 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
 
   const handleTaxpayerSubmit = async (data: any) => {
     try {
-      const { error } = await supabase
+      const { documents, ...contribuableData } = data;
+      
+      // Insérer le contribuable d'abord
+      const { data: newContribuable, error: contribuableError } = await supabase
         .from('contribuables')
         .insert({
-          ...data,
+          ...contribuableData,
           organisation_id: userProfile?.organisation_id,
           created_by: user.id
-        });
+        })
+        .select()
+        .single();
 
-      if (error) {
+      if (contribuableError) {
         toast({
           title: "Erreur",
           description: "Impossible d'enregistrer le contribuable",
           variant: "destructive"
         });
-      } else {
-        toast({
-          title: "Contribuable enregistré",
-          description: "Les informations ont été sauvegardées avec succès"
-        });
-        setActiveView("taxpayers");
+        return;
       }
+
+      // Uploader les documents si présents
+      if (documents && documents.length > 0) {
+        for (const file of documents) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${newContribuable.id}/${Date.now()}-${file.name}`;
+          
+          // Upload du fichier dans le storage
+          const { error: uploadError } = await supabase.storage
+            .from('contribuables-documents')
+            .upload(fileName, file);
+
+          if (uploadError) {
+            console.error('Erreur upload:', uploadError);
+            continue;
+          }
+
+          // Enregistrer la référence dans la table documents
+          await supabase
+            .from('documents')
+            .insert({
+              contribuable_id: newContribuable.id,
+              nom_fichier: file.name,
+              chemin_fichier: fileName,
+              type_document: fileExt || 'autre',
+              taille_fichier: file.size
+            });
+        }
+      }
+
+      toast({
+        title: "Contribuable enregistré",
+        description: documents?.length > 0 
+          ? `Les informations et ${documents.length} document(s) ont été sauvegardés`
+          : "Les informations ont été sauvegardées avec succès"
+      });
+      setActiveView("taxpayers");
     } catch (error) {
+      console.error('Erreur:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'enregistrement",
