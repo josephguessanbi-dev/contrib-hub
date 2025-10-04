@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import DocumentThumbnails from "./DocumentThumbnails";
 
 interface TaxpayerDetailProps {
   taxpayerId: string;
@@ -324,6 +325,19 @@ const TaxpayerDetail = ({ taxpayerId, isOpen, onClose, onUpdate }: TaxpayerDetai
                   />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Documents */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <span>📄</span>
+                <span>Documents</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DocumentThumbnails contribuableId={taxpayerId} />
             </CardContent>
           </Card>
 

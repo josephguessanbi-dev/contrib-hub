@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import TaxpayerDetail from "./TaxpayerDetail";
+import DocumentThumbnails from "./DocumentThumbnails";
 
 interface Taxpayer {
   id: string;
@@ -238,18 +239,26 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Ville</p>
-                  <p className="font-medium">{taxpayer.ville}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Ville</p>
+                      <p className="font-medium">{taxpayer.ville}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Contact</p>
+                      <p className="font-medium">{taxpayer.contact_1}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">RCCM</p>
+                      <p className="font-medium">{taxpayer.rccm || 'Non renseigné'}</p>
+                    </div>
+                  </div>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Contact</p>
-                  <p className="font-medium">{taxpayer.contact_1}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">RCCM</p>
-                  <p className="font-medium">{taxpayer.rccm || 'Non renseigné'}</p>
+                  <p className="text-xs text-muted-foreground mb-2">Documents</p>
+                  <DocumentThumbnails contribuableId={taxpayer.id} />
                 </div>
               </div>
               
