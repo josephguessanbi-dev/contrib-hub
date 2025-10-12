@@ -52,6 +52,7 @@ const EmployeesList = ({ userRole, onEdit, onRefresh }: EmployeesListProps) => {
           id,
           user_id,
           nom,
+          email,
           numero_travail,
           organisation_id,
           created_at
@@ -69,12 +70,10 @@ const EmployeesList = ({ userRole, onEdit, onRefresh }: EmployeesListProps) => {
               .eq('organisation_id', profile.organisation_id)
               .single();
 
-            const { data: authUser } = await supabase.auth.admin.getUserById(profile.user_id);
-
             return {
               id: profile.id,
               nom: profile.nom,
-              email: authUser?.user?.email || 'N/A',
+              email: profile.email || 'N/A',
               numeroTravail: profile.numero_travail,
               role: (roleData?.role as "admin" | "personnel") || 'personnel',
               statut: 'actif',
