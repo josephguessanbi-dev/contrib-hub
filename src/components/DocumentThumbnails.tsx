@@ -54,14 +54,21 @@ const DocumentThumbnails = ({ contribuableId, className = "", canDelete = true }
   const handleDocumentClick = async (doc: Document) => {
     setSelectedDocument(doc);
     
-    // Charger l'URL depuis le storage pour les images
+    // Charger l'URL signée depuis le storage pour les images (bucket privé)
     if (isImageFile(doc.nom_fichier)) {
-      const { data } = supabase.storage
+      const { data, error } = await supabase.storage
         .from('contribuables-documents')
-        .getPublicUrl(doc.chemin_fichier);
+        .createSignedUrl(doc.chemin_fichier, 3600); // Valide 1 heure
       
-      if (data) {
-        setImageUrl(data.publicUrl);
+      if (error) {
+        console.error('Erreur lors du chargement de l\'image:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger l'image",
+          variant: "destructive"
+        });
+      } else if (data) {
+        setImageUrl(data.signedUrl);
       }
     }
   };
