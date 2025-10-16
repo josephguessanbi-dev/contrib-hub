@@ -1,10 +1,39 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+
+// Validation schema
+const taxpayerSchema = z.object({
+  raisonSociale: z.string().trim().min(1, "La raison sociale est requise").max(200, "Maximum 200 caractères"),
+  ville: z.string().trim().min(1, "La ville est requise").max(100, "Maximum 100 caractères"),
+  commune: z.string().trim().min(1, "La commune est requise").max(100, "Maximum 100 caractères"),
+  quartier: z.string().trim().min(1, "Le quartier est requis").max(100, "Maximum 100 caractères"),
+  gerantNom: z.string().trim().min(1, "Le nom du gérant est requis").max(100, "Maximum 100 caractères"),
+  gerantPrenom: z.string().trim().min(1, "Le prénom du gérant est requis").max(100, "Maximum 100 caractères"),
+  rccm: z.string().trim().min(1, "Le RCCM est requis").max(50, "Maximum 50 caractères"),
+  ncc: z.string().trim().min(1, "Le NCC est requis").max(50, "Maximum 50 caractères"),
+  contact1: z.string().trim().regex(/^[0-9+\-\s()]+$/, "Format de téléphone invalide").min(8, "Minimum 8 caractères").max(20, "Maximum 20 caractères"),
+  contact2: z.string().trim().regex(/^[0-9+\-\s()]*$/, "Format de téléphone invalide").max(20, "Maximum 20 caractères").optional(),
+  latitude: z.string().optional().refine(
+    (val) => !val || (val !== "" && !isNaN(parseFloat(val)) && parseFloat(val) >= -90 && parseFloat(val) <= 90),
+    "Latitude doit être entre -90 et 90"
+  ),
+  longitude: z.string().optional().refine(
+    (val) => !val || (val !== "" && !isNaN(parseFloat(val)) && parseFloat(val) >= -180 && parseFloat(val) <= 180),
+    "Longitude doit être entre -180 et 180"
+  ),
+  commentaire: z.string().trim().max(2000, "Maximum 2000 caractères").optional(),
+  documents: z.array(z.instanceof(File)).optional()
+});
 
 interface TaxpayerFormProps {
   onSubmit: (data: any) => void;
@@ -12,43 +41,71 @@ interface TaxpayerFormProps {
 }
 
 const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
-  const [formData, setFormData] = useState({
-    raisonSociale: "",
-    ville: "",
-    commune: "",
-    quartier: "",
-    gerantNom: "",
-    gerantPrenom: "",
-    rccm: "",
-    ncc: "",
-    contact1: "",
-    contact2: "",
-    latitude: "",
-    longitude: "",
-    commentaire: "",
-    documents: [] as File[],
+  const { toast } = useToast();
+  const [documents, setDocuments] = useState<File[]>([]);
+  
+  const form = useForm<z.infer<typeof taxpayerSchema>>({
+    resolver: zodResolver(taxpayerSchema),
+    defaultValues: {
+      raisonSociale: "",
+      ville: "",
+      commune: "",
+      quartier: "",
+      gerantNom: "",
+      gerantPrenom: "",
+      rccm: "",
+      ncc: "",
+      contact1: "",
+      contact2: "",
+      latitude: "",
+      longitude: "",
+      commentaire: "",
+      documents: []
+    },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFormSubmit = (data: z.infer<typeof taxpayerSchema>) => {
+    // Validate file uploads
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    
+    for (const file of documents) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          title: "Erreur",
+          description: `Le fichier ${file.name} dépasse la taille maximale de 10MB`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        toast({
+          title: "Erreur",
+          description: `Le fichier ${file.name} n'est pas un type autorisé (PDF, JPG, PNG, GIF, WEBP)`,
+          variant: "destructive"
+        });
+        return;
+      }
+    }
     
     // Map form data to database column names
     const mappedData = {
-      raison_sociale: formData.raisonSociale,
-      ville: formData.ville,
-      commune: formData.commune,
-      quartier: formData.quartier,
-      nom_gerant: formData.gerantNom,
-      prenom_gerant: formData.gerantPrenom,
-      rccm: formData.rccm,
-      ncc: formData.ncc,
-      contact_1: formData.contact1,
-      contact_2: formData.contact2 || null,
-      latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-      longitude: formData.longitude ? parseFloat(formData.longitude) : null,
-      commentaire: formData.commentaire || null,
+      raison_sociale: data.raisonSociale,
+      ville: data.ville,
+      commune: data.commune,
+      quartier: data.quartier,
+      nom_gerant: data.gerantNom,
+      prenom_gerant: data.gerantPrenom,
+      rccm: data.rccm,
+      ncc: data.ncc,
+      contact_1: data.contact1,
+      contact_2: data.contact2 || null,
+      latitude: data.latitude && data.latitude !== "" ? parseFloat(data.latitude) : null,
+      longitude: data.longitude && data.longitude !== "" ? parseFloat(data.longitude) : null,
+      commentaire: data.commentaire || null,
       statut: "en_attente",
-      documents: formData.documents, // Include documents
+      documents: documents,
     };
     
     onSubmit(mappedData);
@@ -56,19 +113,16 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFormData({
-        ...formData,
-        documents: [...formData.documents, ...Array.from(e.target.files)],
-      });
+      const newDocs = [...documents, ...Array.from(e.target.files)];
+      setDocuments(newDocs);
+      form.setValue('documents', newDocs);
     }
   };
 
   const removeDocument = (index: number) => {
-    const newDocuments = formData.documents.filter((_, i) => i !== index);
-    setFormData({
-      ...formData,
-      documents: newDocuments,
-    });
+    const newDocuments = documents.filter((_, i) => i !== index);
+    setDocuments(newDocuments);
+    form.setValue('documents', newDocuments);
   };
 
   return (
@@ -87,7 +141,8 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         {/* Informations de l'entreprise */}
         <Card>
           <CardHeader>
@@ -98,42 +153,58 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="raisonSociale">Raison sociale *</Label>
-                <Input
-                  id="raisonSociale"
-                  value={formData.raisonSociale}
-                  onChange={(e) => setFormData({ ...formData, raisonSociale: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ville">Ville *</Label>
-                <Input
-                  id="ville"
-                  value={formData.ville}
-                  onChange={(e) => setFormData({ ...formData, ville: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="commune">Commune *</Label>
-                <Input
-                  id="commune"
-                  value={formData.commune}
-                  onChange={(e) => setFormData({ ...formData, commune: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="quartier">Quartier *</Label>
-                <Input
-                  id="quartier"
-                  value={formData.quartier}
-                  onChange={(e) => setFormData({ ...formData, quartier: e.target.value })}
-                  required
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="raisonSociale"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Raison sociale *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="ville"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ville *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="commune"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Commune *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="quartier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quartier *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </CardContent>
         </Card>
@@ -148,24 +219,32 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="gerantNom">Nom du gérant *</Label>
-                <Input
-                  id="gerantNom"
-                  value={formData.gerantNom}
-                  onChange={(e) => setFormData({ ...formData, gerantNom: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gerantPrenom">Prénom du gérant *</Label>
-                <Input
-                  id="gerantPrenom"
-                  value={formData.gerantPrenom}
-                  onChange={(e) => setFormData({ ...formData, gerantPrenom: e.target.value })}
-                  required
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="gerantNom"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nom du gérant *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="gerantPrenom"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Prénom du gérant *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </CardContent>
         </Card>
@@ -180,24 +259,32 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="rccm">RCCM *</Label>
-                <Input
-                  id="rccm"
-                  value={formData.rccm}
-                  onChange={(e) => setFormData({ ...formData, rccm: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ncc">NCC *</Label>
-                <Input
-                  id="ncc"
-                  value={formData.ncc}
-                  onChange={(e) => setFormData({ ...formData, ncc: e.target.value })}
-                  required
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="rccm"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>RCCM *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="ncc"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>NCC *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </CardContent>
         </Card>
@@ -212,25 +299,32 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="contact1">Contact 1 *</Label>
-                <Input
-                  id="contact1"
-                  type="tel"
-                  value={formData.contact1}
-                  onChange={(e) => setFormData({ ...formData, contact1: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact2">Contact 2</Label>
-                <Input
-                  id="contact2"
-                  type="tel"
-                  value={formData.contact2}
-                  onChange={(e) => setFormData({ ...formData, contact2: e.target.value })}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="contact1"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact 1 *</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="tel" placeholder="+243 XXX XXX XXX" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="contact2"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact 2</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="tel" placeholder="+243 XXX XXX XXX" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </CardContent>
         </Card>
@@ -245,28 +339,32 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="latitude">Latitude</Label>
-                <Input
-                  id="latitude"
-                  type="number"
-                  step="any"
-                  value={formData.latitude}
-                  onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                  placeholder="Ex: -4.325"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="longitude">Longitude</Label>
-                <Input
-                  id="longitude"
-                  type="number"
-                  step="any"
-                  value={formData.longitude}
-                  onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                  placeholder="Ex: 15.315"
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="latitude"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Latitude</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="text" placeholder="Ex: -4.325" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="longitude"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Longitude</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="text" placeholder="Ex: 15.315" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             <div className="bg-muted rounded-lg p-4 text-center text-muted-foreground">
               📱 Cliquez sur la carte pour définir la position géographique
@@ -295,13 +393,13 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
                 onChange={handleFileChange}
                 onClick={(e) => e.stopPropagation()}
               />
-              {formData.documents.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  <p className="text-sm font-medium text-foreground">
-                    {formData.documents.length} document(s) sélectionné(s):
-                  </p>
-                  <div className="space-y-2">
-                    {formData.documents.map((doc, index) => (
+              {documents.length > 0 && (
+                 <div className="mt-3 space-y-2">
+                   <p className="text-sm font-medium text-foreground">
+                     {documents.length} document(s) sélectionné(s):
+                   </p>
+                   <div className="space-y-2">
+                     {documents.map((doc, index) => (
                       <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
                         <span className="text-sm text-foreground truncate flex-1">{doc.name}</span>
                         <Button
@@ -334,16 +432,19 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="commentaire">Commentaires ou remarques</Label>
-              <Textarea
-                id="commentaire"
-                value={formData.commentaire}
-                onChange={(e) => setFormData({ ...formData, commentaire: e.target.value })}
-                rows={4}
-                placeholder="Informations supplémentaires..."
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="commentaire"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Commentaires ou remarques</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} rows={4} placeholder="Informations supplémentaires..." />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 
@@ -359,7 +460,8 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
             {isPublic ? "Soumettre la demande" : "Enregistrer le contribuable"}
           </Button>
         </div>
-      </form>
+        </form>
+      </Form>
     </div>
   );
 };
