@@ -291,7 +291,7 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
                 id="documents"
                 type="file"
                 multiple
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
                 onChange={handleFileChange}
                 onClick={(e) => e.stopPropagation()}
               />

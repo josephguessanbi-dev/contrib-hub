@@ -2,16 +2,90 @@ import { useToast } from "@/hooks/use-toast";
 import TaxpayerForm from "@/components/TaxpayerForm";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 const PublicRegister = () => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (data: any) => {
-    console.log("Soumission publique contribuable:", data);
-    toast({
-      title: "Demande soumise",
-      description: "Votre demande d'enregistrement a été envoyée et sera examinée par nos équipes.",
-    });
+  const handleSubmit = async (data: any) => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const { documents, ...contribuableData } = data;
+      
+      // Organisation par défaut pour les inscriptions publiques
+      const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+      
+      // Insérer le contribuable avec statut "en_attente"
+      const { data: newContribuable, error: contribuableError } = await supabase
+        .from('contribuables')
+        .insert({
+          ...contribuableData,
+          organisation_id: DEFAULT_ORG_ID,
+          statut: 'en_attente'
+        })
+        .select()
+        .single();
+
+      if (contribuableError) {
+        console.error('Erreur contribuable:', contribuableError);
+        toast({
+          title: "Erreur",
+          description: "Impossible d'enregistrer votre demande. Veuillez réessayer.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Uploader les documents si présents
+      if (documents && documents.length > 0) {
+        for (const file of documents) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${newContribuable.id}/${Date.now()}-${file.name}`;
+          
+          // Upload du fichier dans le storage
+          const { error: uploadError } = await supabase.storage
+            .from('contribuables-documents')
+            .upload(fileName, file);
+
+          if (uploadError) {
+            console.error('Erreur upload:', uploadError);
+            continue;
+          }
+
+          // Enregistrer la référence dans la table documents
+          await supabase
+            .from('documents')
+            .insert({
+              contribuable_id: newContribuable.id,
+              nom_fichier: file.name,
+              chemin_fichier: fileName,
+              type_document: fileExt || 'autre',
+              taille_fichier: file.size
+            });
+        }
+      }
+
+      toast({
+        title: "Demande soumise avec succès",
+        description: documents?.length > 0 
+          ? `Votre demande et ${documents.length} document(s) ont été envoyés. Nos équipes l'examineront prochainement.`
+          : "Votre demande a été envoyée et sera examinée par nos équipes."
+      });
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'envoi de votre demande.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
