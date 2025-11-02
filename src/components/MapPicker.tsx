@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card } from '@/components/ui/card';
@@ -14,23 +14,37 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+interface LocationMarkerProps {
+  position: [number, number];
+  onPositionChange: (pos: [number, number]) => void;
+}
+
+function LocationMarker({ position, onPositionChange }: LocationMarkerProps) {
+  const [markerPosition, setMarkerPosition] = useState<[number, number]>(position);
+
+  const map = useMapEvents({
+    click(e) {
+      const newPos: [number, number] = [e.latlng.lat, e.latlng.lng];
+      setMarkerPosition(newPos);
+      onPositionChange(newPos);
+    },
+  });
+
+  useEffect(() => {
+    setMarkerPosition(position);
+  }, [position]);
+
+  return (
+    <Marker position={markerPosition}>
+      <Popup>Position sélectionnée</Popup>
+    </Marker>
+  );
+}
+
 interface MapPickerProps {
   latitude?: string;
   longitude?: string;
   onLocationChange: (lat: number, lng: number) => void;
-}
-
-function LocationMarker({ position, setPosition }: { 
-  position: [number, number]; 
-  setPosition: (pos: [number, number]) => void;
-}) {
-  useMapEvents({
-    click(e) {
-      setPosition([e.latlng.lat, e.latlng.lng]);
-    },
-  });
-
-  return <Marker position={position} />;
 }
 
 const MapPicker = ({ latitude, longitude, onLocationChange }: MapPickerProps) => {
@@ -43,11 +57,10 @@ const MapPicker = ({ latitude, longitude, onLocationChange }: MapPickerProps) =>
       : defaultCenter;
   });
 
-  useEffect(() => {
-    if (position) {
-      onLocationChange(position[0], position[1]);
-    }
-  }, [position, onLocationChange]);
+  const handlePositionChange = (newPos: [number, number]) => {
+    setPosition(newPos);
+    onLocationChange(newPos[0], newPos[1]);
+  };
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -57,7 +70,7 @@ const MapPicker = ({ latitude, longitude, onLocationChange }: MapPickerProps) =>
             location.coords.latitude,
             location.coords.longitude
           ];
-          setPosition(newPos);
+          handlePositionChange(newPos);
         },
         (error) => {
           console.error("Erreur de géolocalisation:", error);
@@ -96,13 +109,13 @@ const MapPicker = ({ latitude, longitude, onLocationChange }: MapPickerProps) =>
           center={position}
           zoom={13}
           style={{ height: '100%', width: '100%' }}
-          key={`${position[0]}-${position[1]}`}
+          scrollWheelZoom={true}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <LocationMarker position={position} setPosition={setPosition} />
+          <LocationMarker position={position} onPositionChange={handlePositionChange} />
         </MapContainer>
       </div>
     </Card>
