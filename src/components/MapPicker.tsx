@@ -30,7 +30,7 @@ function LocationMarker({ position, setPosition }: {
     },
   });
 
-  return position ? <Marker position={position} /> : null;
+  return <Marker position={position} />;
 }
 
 const MapPicker = ({ latitude, longitude, onLocationChange }: MapPickerProps) => {
@@ -96,9 +96,10 @@ const MapPicker = ({ latitude, longitude, onLocationChange }: MapPickerProps) =>
           center={position}
           zoom={13}
           style={{ height: '100%', width: '100%' }}
+          key={`${position[0]}-${position[1]}`}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <LocationMarker position={position} setPosition={setPosition} />
