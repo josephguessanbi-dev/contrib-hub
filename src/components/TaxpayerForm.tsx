@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import MapPicker from "@/components/MapPicker";
 
 // Validation schema
 const taxpayerSchema = z.object({
@@ -338,7 +339,15 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <MapPicker
+              latitude={form.watch("latitude")}
+              longitude={form.watch("longitude")}
+              onLocationChange={(lat, lng) => {
+                form.setValue("latitude", lat.toString());
+                form.setValue("longitude", lng.toString());
+              }}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <FormField
                 control={form.control}
                 name="latitude"
@@ -346,7 +355,7 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
                   <FormItem>
                     <FormLabel>Latitude</FormLabel>
                     <FormControl>
-                      <Input {...field} type="text" placeholder="Ex: -4.325" />
+                      <Input {...field} type="text" placeholder="Ex: -4.325" readOnly />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -359,17 +368,12 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
                   <FormItem>
                     <FormLabel>Longitude</FormLabel>
                     <FormControl>
-                      <Input {...field} type="text" placeholder="Ex: 15.315" />
+                      <Input {...field} type="text" placeholder="Ex: 15.315" readOnly />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-            <div className="bg-muted rounded-lg p-4 text-center text-muted-foreground">
-              📱 Cliquez sur la carte pour définir la position géographique
-              <br />
-              <small>(Fonctionnalité carte sera intégrée avec la géolocalisation)</small>
             </div>
           </CardContent>
         </Card>
