@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import DocumentThumbnails from "./DocumentThumbnails";
+import MapPicker from "./MapPicker";
 
 interface TaxpayerDetailProps {
   taxpayerId: string;
@@ -303,25 +304,39 @@ const TaxpayerDetail = ({ taxpayerId, isOpen, onClose, onUpdate }: TaxpayerDetai
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <MapPicker
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onLocationChange={(lat, lng) => {
+                  if (isEditing) {
+                    setFormData({ 
+                      ...formData, 
+                      latitude: lat.toString(), 
+                      longitude: lng.toString() 
+                    });
+                  }
+                }}
+                disabled={!isEditing}
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div className="space-y-2">
                   <Label>Latitude</Label>
                   <Input
-                    type="number"
-                    step="any"
+                    type="text"
                     value={formData.latitude}
                     onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
                     disabled={!isEditing}
+                    placeholder="Ex: -4.325"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Longitude</Label>
                   <Input
-                    type="number"
-                    step="any"
+                    type="text"
                     value={formData.longitude}
                     onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
                     disabled={!isEditing}
+                    placeholder="Ex: 15.315"
                   />
                 </div>
               </div>

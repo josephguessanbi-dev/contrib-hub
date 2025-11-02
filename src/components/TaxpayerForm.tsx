@@ -388,15 +388,19 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="documents">Documents (Registre de commerce, DFE, Pièce d'identité)</Label>
+              <Label htmlFor="documents">Documents (PDF ou Images: JPG, PNG, GIF, WEBP)</Label>
               <Input
                 id="documents"
                 type="file"
                 multiple
-                accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
+                accept="image/*,.pdf"
                 onChange={handleFileChange}
                 onClick={(e) => e.stopPropagation()}
+                className="cursor-pointer"
               />
+              <p className="text-xs text-muted-foreground">
+                Formats acceptés: PDF, JPG, JPEG, PNG, GIF, WEBP (max 10MB par fichier)
+              </p>
               {documents.length > 0 && (
                  <div className="mt-3 space-y-2">
                    <p className="text-sm font-medium text-foreground">
