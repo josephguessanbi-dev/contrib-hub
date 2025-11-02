@@ -89,24 +89,36 @@ const PublicRegister = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-96 h-96 bg-secondary/5 rounded-full blur-3xl"></div>
+      </div>
+
       {/* Header */}
-      <div className="bg-card/50 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="relative bg-card/80 backdrop-blur-md border-b border-border/50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">TC</span>
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary via-primary to-primary/70 rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
               </div>
               <div>
-                <h1 className="font-bold text-foreground">TaxContrib</h1>
-                <p className="text-xs text-muted-foreground">Gestion des contribuables</p>
+                <h1 className="text-xl font-bold text-foreground">TaxContrib</h1>
+                <p className="text-xs text-muted-foreground">Gestion moderne des contribuables</p>
               </div>
             </div>
             <Button 
               variant="outline"
               onClick={() => window.location.href = "/"}
+              className="hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-all duration-200"
             >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
               Se connecter
             </Button>
           </div>
@@ -114,17 +126,22 @@ const PublicRegister = () => {
       </div>
 
       {/* Info Banner */}
-      <div className="bg-primary/10 border-b border-primary/20">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <Card className="bg-primary/5 border-primary/20">
-            <CardContent className="p-4">
-              <div className="flex items-start space-x-3">
-                <span className="text-2xl">ℹ️</span>
-                <div>
-                  <h3 className="font-semibold text-foreground">Information importante</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
+      <div className="relative bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-b border-primary/20 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <Card className="bg-card/60 backdrop-blur-sm border-primary/30 shadow-lg">
+            <CardContent className="p-5">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-foreground mb-1">Information importante</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     Ce formulaire est destiné à l'enregistrement public des contribuables. 
-                    Votre demande sera examinée par nos équipes avant validation.
+                    Votre demande sera examinée par nos équipes avant validation. 
+                    <span className="font-medium text-foreground"> Assurez-vous de remplir tous les champs requis.</span>
                   </p>
                 </div>
               </div>
@@ -134,7 +151,9 @@ const PublicRegister = () => {
       </div>
 
       {/* Form */}
-      <TaxpayerForm onSubmit={handleSubmit} isPublic={true} />
+      <div className="relative">
+        <TaxpayerForm onSubmit={handleSubmit} isPublic={true} />
+      </div>
     </div>
   );
 };

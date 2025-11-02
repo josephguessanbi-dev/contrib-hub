@@ -127,17 +127,22 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">
+    <div className="max-w-5xl mx-auto p-6 py-10">
+      <div className="mb-10 text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-primary/70 rounded-2xl mb-4 shadow-lg">
+          <svg className="w-8 h-8 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h1 className="text-4xl font-bold text-foreground mb-3">
           {isPublic ? "Enregistrement Contribuable" : "Nouveau Contribuable"}
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
           Veuillez remplir tous les champs obligatoires pour enregistrer un contribuable
         </p>
         {isPublic && (
-          <Badge variant="secondary" className="mt-4">
-            Formulaire public - Validation requise
+          <Badge variant="secondary" className="mt-4 px-4 py-2 text-sm">
+            📋 Formulaire public - Validation requise
           </Badge>
         )}
       </div>
@@ -145,11 +150,13 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         {/* Informations de l'entreprise */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>🏢</span>
-              <span>Informations de l'entreprise</span>
+        <Card className="border-l-4 border-l-primary shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+            <CardTitle className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">🏢</span>
+              </div>
+              <span className="text-xl">Informations de l'entreprise</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -211,11 +218,13 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
         </Card>
 
         {/* Informations du gérant */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>👤</span>
-              <span>Informations du gérant</span>
+        <Card className="border-l-4 border-l-secondary shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="bg-gradient-to-r from-secondary/20 to-transparent">
+            <CardTitle className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-secondary/30 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">👤</span>
+              </div>
+              <span className="text-xl">Informations du gérant</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -251,11 +260,13 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
         </Card>
 
         {/* Informations légales */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>📋</span>
-              <span>Informations légales</span>
+        <Card className="border-l-4 border-l-accent shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="bg-gradient-to-r from-accent/30 to-transparent">
+            <CardTitle className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-accent/40 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📋</span>
+              </div>
+              <span className="text-xl">Informations légales</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -291,11 +302,13 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
         </Card>
 
         {/* Contacts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>📞</span>
-              <span>Contacts</span>
+        <Card className="border-l-4 border-l-success shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="bg-gradient-to-r from-success/10 to-transparent">
+            <CardTitle className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-success/20 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📞</span>
+              </div>
+              <span className="text-xl">Contacts</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -331,11 +344,13 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
         </Card>
 
         {/* Géolocalisation */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>📍</span>
-              <span>Géolocalisation</span>
+        <Card className="border-l-4 border-l-warning shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="bg-gradient-to-r from-warning/10 to-transparent">
+            <CardTitle className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-warning/20 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📍</span>
+              </div>
+              <span className="text-xl">Géolocalisation</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -379,11 +394,13 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
         </Card>
 
         {/* Documents */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>📄</span>
-              <span>Documents</span>
+        <Card className="border-l-4 border-l-primary shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+            <CardTitle className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📄</span>
+              </div>
+              <span className="text-xl">Documents</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -432,11 +449,13 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
         </Card>
 
         {/* Commentaires */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>💬</span>
-              <span>Commentaires</span>
+        <Card className="border-l-4 border-l-muted shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="bg-gradient-to-r from-muted/30 to-transparent">
+            <CardTitle className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-muted/50 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">💬</span>
+              </div>
+              <span className="text-xl">Commentaires</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -457,14 +476,17 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
         </Card>
 
         {/* Submit */}
-        <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline">
+        <div className="flex justify-end space-x-4 pt-6">
+          <Button type="button" variant="outline" className="px-8 hover:bg-muted">
             Annuler
           </Button>
           <Button 
             type="submit"
-            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground px-8"
+            className="bg-gradient-to-r from-primary via-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground px-10 shadow-lg hover:shadow-xl transition-all duration-200"
           >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
             {isPublic ? "Soumettre la demande" : "Enregistrer le contribuable"}
           </Button>
         </div>
