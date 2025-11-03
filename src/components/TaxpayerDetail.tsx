@@ -37,6 +37,11 @@ const TaxpayerDetail = ({ taxpayerId, isOpen, onClose, onUpdate }: TaxpayerDetai
     commentaire: "",
     statut: "en_attente" as "en_attente" | "valide" | "rejete",
   });
+  const [creatorInfo, setCreatorInfo] = useState<{
+    nom: string;
+    email: string | null;
+    user_id: string;
+  } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,7 +55,14 @@ const TaxpayerDetail = ({ taxpayerId, isOpen, onClose, onUpdate }: TaxpayerDetai
     try {
       const { data, error } = await supabase
         .from('contribuables')
-        .select('*')
+        .select(`
+          *,
+          profiles!created_by (
+            nom,
+            email,
+            user_id
+          )
+        `)
         .eq('id', taxpayerId)
         .single();
 
@@ -73,6 +85,11 @@ const TaxpayerDetail = ({ taxpayerId, isOpen, onClose, onUpdate }: TaxpayerDetai
           commentaire: data.commentaire || "",
           statut: data.statut,
         });
+        
+        // Set creator info if available
+        if (data.profiles) {
+          setCreatorInfo(data.profiles as any);
+        }
       }
     } catch (error) {
       console.error('Erreur:', error);
@@ -376,6 +393,34 @@ const TaxpayerDetail = ({ taxpayerId, isOpen, onClose, onUpdate }: TaxpayerDetai
               </div>
             </CardContent>
           </Card>
+
+          {/* Informations de l'agent créateur */}
+          {creatorInfo && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <span>👨‍💼</span>
+                  <span>Agent enregistreur</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Nom de l'agent</Label>
+                    <p className="font-medium mt-1">{creatorInfo.nom}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Email</Label>
+                    <p className="font-medium mt-1">{creatorInfo.email || 'Non renseigné'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">ID Agent</Label>
+                    <p className="font-mono text-sm mt-1 truncate">{creatorInfo.user_id}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <DialogFooter className="flex flex-col sm:flex-row gap-2">

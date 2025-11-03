@@ -23,6 +23,11 @@ interface Taxpayer {
   commune: string;
   quartier: string | null;
   contact_2: string | null;
+  created_by: string | null;
+  creator?: {
+    nom: string;
+    email: string | null;
+  };
 }
 
 interface TaxpayersListProps {
@@ -46,7 +51,13 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
       try {
         const { data, error } = await supabase
           .from('contribuables')
-          .select('*')
+          .select(`
+            *,
+            profiles!created_by (
+              nom,
+              email
+            )
+          `)
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -56,7 +67,12 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
             variant: "destructive"
           });
         } else {
-          setTaxpayers(data || []);
+          // Map the profiles data to creator
+          const mappedData = data?.map(item => ({
+            ...item,
+            creator: item.profiles as any
+          })) || [];
+          setTaxpayers(mappedData as any);
         }
       } catch (error) {
         console.error('Erreur lors du chargement des contribuables:', error);
@@ -263,8 +279,18 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
               </div>
               
               <div className="flex flex-wrap gap-2 justify-between items-center">
-                <div className="text-xs text-muted-foreground">
-                  Enregistré le {new Date(taxpayer.created_at).toLocaleDateString("fr-FR")}
+                <div className="flex flex-col space-y-1">
+                  <div className="text-xs text-muted-foreground">
+                    Enregistré le {new Date(taxpayer.created_at).toLocaleDateString("fr-FR")}
+                  </div>
+                  {taxpayer.creator && (
+                    <div className="text-xs text-muted-foreground">
+                      Par: <span className="font-medium text-foreground">{taxpayer.creator.nom}</span>
+                      {taxpayer.creator.email && (
+                        <span className="ml-1">({taxpayer.creator.email})</span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex gap-2">
@@ -329,9 +355,21 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
             const fetchTaxpayers = async () => {
               const { data } = await supabase
                 .from('contribuables')
-                .select('*')
+                .select(`
+                  *,
+                  profiles!created_by (
+                    nom,
+                    email
+                  )
+                `)
                 .order('created_at', { ascending: false });
-              if (data) setTaxpayers(data);
+              if (data) {
+                const mappedData = data.map(item => ({
+                  ...item,
+                  creator: item.profiles as any
+                }));
+                setTaxpayers(mappedData as any);
+              }
             };
             fetchTaxpayers();
           }}
