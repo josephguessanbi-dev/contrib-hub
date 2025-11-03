@@ -246,14 +246,6 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
             >
               👥 Contribuables
             </Button>
-            <Button
-              variant={activeView === "add-taxpayer" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveView("add-taxpayer")}
-              className="shrink-0"
-            >
-              ➕ Nouveau
-            </Button>
             {userProfile?.role === 'admin' && (
               <Button
                 variant={activeView === "staff" ? "default" : "ghost"}
@@ -262,16 +254,6 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
                 className="shrink-0"
               >
                 👨‍💼 Staff
-              </Button>
-            )}
-            {userProfile?.role === 'admin' && (
-              <Button
-                variant={activeView === "add-staff" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveView("add-staff")}
-                className="shrink-0"
-              >
-                ➕ Agent
               </Button>
             )}
           </div>
