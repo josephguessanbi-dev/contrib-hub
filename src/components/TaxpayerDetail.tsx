@@ -55,14 +55,7 @@ const TaxpayerDetail = ({ taxpayerId, isOpen, onClose, onUpdate }: TaxpayerDetai
     try {
       const { data, error } = await supabase
         .from('contribuables')
-        .select(`
-          *,
-          profiles!created_by (
-            nom,
-            email,
-            user_id
-          )
-        `)
+        .select('*')
         .eq('id', taxpayerId)
         .single();
 
@@ -86,9 +79,17 @@ const TaxpayerDetail = ({ taxpayerId, isOpen, onClose, onUpdate }: TaxpayerDetai
           statut: data.statut,
         });
         
-        // Set creator info if available
-        if (data.profiles) {
-          setCreatorInfo(data.profiles as any);
+        // Fetch creator info if available
+        if (data.created_by) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('nom, email, user_id')
+            .eq('user_id', data.created_by)
+            .single();
+          
+          if (profileData) {
+            setCreatorInfo(profileData);
+          }
         }
       }
     } catch (error) {

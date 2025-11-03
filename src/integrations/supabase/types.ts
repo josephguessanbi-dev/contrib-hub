@@ -83,6 +83,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "contribuables_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "contribuables_organisation_id_fkey"
             columns: ["organisation_id"]
             isOneToOne: false
@@ -272,10 +279,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_user_organisation: {
-        Args: { user_uuid: string }
-        Returns: string
-      }
+      get_user_organisation: { Args: { user_uuid: string }; Returns: string }
       get_user_role: {
         Args: { org_uuid: string; user_uuid: string }
         Returns: Database["public"]["Enums"]["app_role"]

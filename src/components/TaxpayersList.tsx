@@ -49,15 +49,9 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
   useEffect(() => {
     const fetchTaxpayers = async () => {
       try {
-        const { data, error } = await supabase
+        const { data: taxpayersData, error } = await supabase
           .from('contribuables')
-          .select(`
-            *,
-            profiles!created_by (
-              nom,
-              email
-            )
-          `)
+          .select('*')
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -66,14 +60,35 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
             description: "Impossible de charger les contribuables",
             variant: "destructive"
           });
-        } else {
-          // Map the profiles data to creator
-          const mappedData = data?.map(item => ({
-            ...item,
-            creator: item.profiles as any
-          })) || [];
-          setTaxpayers(mappedData as any);
+          setIsLoading(false);
+          return;
         }
+
+        // Fetch creator profiles for taxpayers that have created_by
+        const creatorIds = [...new Set(taxpayersData?.filter(t => t.created_by).map(t => t.created_by))];
+        let creatorsMap: Record<string, any> = {};
+        
+        if (creatorIds.length > 0) {
+          const { data: creatorsData } = await supabase
+            .from('profiles')
+            .select('user_id, nom, email')
+            .in('user_id', creatorIds);
+          
+          if (creatorsData) {
+            creatorsMap = creatorsData.reduce((acc, creator) => {
+              acc[creator.user_id] = creator;
+              return acc;
+            }, {} as Record<string, any>);
+          }
+        }
+
+        // Merge creator data with taxpayers
+        const enrichedTaxpayers = taxpayersData?.map(taxpayer => ({
+          ...taxpayer,
+          creator: taxpayer.created_by ? creatorsMap[taxpayer.created_by] : null
+        })) || [];
+
+        setTaxpayers(enrichedTaxpayers as any);
       } catch (error) {
         console.error('Erreur lors du chargement des contribuables:', error);
         toast({
@@ -353,22 +368,35 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
           onUpdate={() => {
             // Refresh the list
             const fetchTaxpayers = async () => {
-              const { data } = await supabase
+              const { data: taxpayersData } = await supabase
                 .from('contribuables')
-                .select(`
-                  *,
-                  profiles!created_by (
-                    nom,
-                    email
-                  )
-                `)
+                .select('*')
                 .order('created_at', { ascending: false });
-              if (data) {
-                const mappedData = data.map(item => ({
-                  ...item,
-                  creator: item.profiles as any
+              
+              if (taxpayersData) {
+                const creatorIds = [...new Set(taxpayersData.filter(t => t.created_by).map(t => t.created_by))];
+                let creatorsMap: Record<string, any> = {};
+                
+                if (creatorIds.length > 0) {
+                  const { data: creatorsData } = await supabase
+                    .from('profiles')
+                    .select('user_id, nom, email')
+                    .in('user_id', creatorIds);
+                  
+                  if (creatorsData) {
+                    creatorsMap = creatorsData.reduce((acc, creator) => {
+                      acc[creator.user_id] = creator;
+                      return acc;
+                    }, {} as Record<string, any>);
+                  }
+                }
+
+                const enrichedTaxpayers = taxpayersData.map(taxpayer => ({
+                  ...taxpayer,
+                  creator: taxpayer.created_by ? creatorsMap[taxpayer.created_by] : null
                 }));
-                setTaxpayers(mappedData as any);
+
+                setTaxpayers(enrichedTaxpayers as any);
               }
             };
             fetchTaxpayers();
