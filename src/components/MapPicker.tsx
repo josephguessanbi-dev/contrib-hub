@@ -41,10 +41,13 @@ const MapPicker: React.FC<MapPickerProps> = ({
   const [position, setPosition] = useState<[number, number]>(initial);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [locationName, setLocationName] = useState<string>("");
+  const [showPOI, setShowPOI] = useState(false);
 
   const mapEl = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<LeafletMarker | null>(null);
+  const poiMarkersRef = useRef<LeafletMarker[]>([]);
 
   // Initialize map once
   useEffect(() => {
@@ -100,18 +103,107 @@ const MapPicker: React.FC<MapPickerProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latitude, longitude]);
 
-  const setMarkerAndNotify = (newPos: [number, number], fly = true) => {
+  const setMarkerAndNotify = async (newPos: [number, number], fly = true) => {
     setPosition(newPos);
-    if (markerRef.current) {
-      markerRef.current.setLatLng(newPos);
-    } else if (mapRef.current) {
-      markerRef.current = L.marker(newPos).addTo(mapRef.current);
+    
+    // Reverse geocoding pour obtenir le nom du lieu
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${newPos[0]}&lon=${newPos[1]}`
+      );
+      const data = await response.json();
+      const name = data.display_name || "Lieu inconnu";
+      setLocationName(name);
+      
+      // Créer ou mettre à jour le marqueur avec popup
+      if (markerRef.current) {
+        markerRef.current.setLatLng(newPos);
+        markerRef.current.bindPopup(`<strong>${name}</strong>`).openPopup();
+      } else if (mapRef.current) {
+        markerRef.current = L.marker(newPos).addTo(mapRef.current);
+        markerRef.current.bindPopup(`<strong>${name}</strong>`).openPopup();
+      }
+    } catch (error) {
+      console.error("Reverse geocoding error:", error);
+      if (markerRef.current) {
+        markerRef.current.setLatLng(newPos);
+      } else if (mapRef.current) {
+        markerRef.current = L.marker(newPos).addTo(mapRef.current);
+      }
     }
+    
     if (mapRef.current && fly) {
       mapRef.current.flyTo(newPos, Math.max(mapRef.current.getZoom(), 13));
     }
     if (!disabled) {
       onLocationChange(newPos[0], newPos[1]);
+    }
+    
+    // Charger les POI si activé
+    if (showPOI) {
+      loadNearbyPOI(newPos);
+    }
+  };
+
+  const loadNearbyPOI = async (center: [number, number]) => {
+    if (!mapRef.current) return;
+    
+    // Nettoyer les anciens POI
+    poiMarkersRef.current.forEach(m => m.remove());
+    poiMarkersRef.current = [];
+    
+    try {
+      // Utiliser Overpass API pour récupérer les POI dans un rayon de ~500m
+      const radius = 500;
+      const query = `
+        [out:json][timeout:5];
+        (
+          node["amenity"](around:${radius},${center[0]},${center[1]});
+          node["shop"](around:${radius},${center[0]},${center[1]});
+          node["tourism"](around:${radius},${center[0]},${center[1]});
+        );
+        out body;
+      `;
+      
+      const response = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        body: `data=${encodeURIComponent(query)}`
+      });
+      
+      const data = await response.json();
+      
+      // Créer un icône personnalisé pour les POI
+      const poiIcon = L.icon({
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [20, 32],
+        iconAnchor: [10, 32],
+        popupAnchor: [0, -32],
+      });
+      
+      // Limiter à 20 POI pour ne pas surcharger
+      const elements = data.elements.slice(0, 20);
+      
+      elements.forEach((element: any) => {
+        if (element.lat && element.lon && mapRef.current) {
+          const name = element.tags?.name || element.tags?.amenity || element.tags?.shop || 'POI';
+          const marker = L.marker([element.lat, element.lon], { icon: poiIcon })
+            .addTo(mapRef.current);
+          
+          marker.bindPopup(`
+            <div style="font-size: 12px;">
+              <strong>${name}</strong><br/>
+              ${element.tags?.amenity ? `Type: ${element.tags.amenity}` : ''}
+              ${element.tags?.shop ? `Boutique: ${element.tags.shop}` : ''}
+            </div>
+          `);
+          
+          poiMarkersRef.current.push(marker);
+        }
+      });
+    } catch (error) {
+      console.error("Error loading POI:", error);
     }
   };
 
@@ -175,19 +267,46 @@ const MapPicker: React.FC<MapPickerProps> = ({
               {disabled ? "Position géographique" : "Cliquez sur la carte pour sélectionner"}
             </span>
           </div>
-          {!disabled && (
+          <div className="flex gap-2">
+            {!disabled && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={getCurrentLocation}
+                className="gap-2"
+              >
+                <Navigation className="h-4 w-4" />
+                Ma position
+              </Button>
+            )}
             <Button
               type="button"
-              variant="outline"
+              variant={showPOI ? "default" : "outline"}
               size="sm"
-              onClick={getCurrentLocation}
+              onClick={() => {
+                const newState = !showPOI;
+                setShowPOI(newState);
+                if (newState && position) {
+                  loadNearbyPOI(position);
+                } else {
+                  poiMarkersRef.current.forEach(m => m.remove());
+                  poiMarkersRef.current = [];
+                }
+              }}
               className="gap-2"
             >
-              <Navigation className="h-4 w-4" />
-              Ma position
+              <MapPin className="h-4 w-4" />
+              POI
             </Button>
-          )}
+          </div>
         </div>
+        
+        {locationName && (
+          <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+            📍 <strong>Lieu:</strong> {locationName}
+          </div>
+        )}
 
         {!disabled && (
           <div className="flex gap-2">
