@@ -55,13 +55,18 @@ const MapPicker: React.FC<MapPickerProps> = ({
       zoom: 13,
       zoomControl: true,
       attributionControl: true,
+      maxZoom: 19,
+      preferCanvas: true,
     });
     mapRef.current = map;
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    // Using Carto's high-quality tiles with retina support
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
       attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      crossOrigin: true,
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: "abcd",
+      maxZoom: 20,
+      detectRetina: true,
     }).addTo(map);
 
     // Place initial marker

@@ -477,7 +477,17 @@ const TaxpayerForm = ({ onSubmit, isPublic = false }: TaxpayerFormProps) => {
 
         {/* Submit */}
         <div className="flex justify-end space-x-4 pt-6">
-          <Button type="button" variant="outline" className="px-8 hover:bg-muted">
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="px-8 hover:bg-muted"
+            onClick={() => {
+              form.reset();
+              if (isPublic) {
+                window.location.href = "/";
+              }
+            }}
+          >
             Annuler
           </Button>
           <Button 
