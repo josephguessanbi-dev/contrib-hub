@@ -38,7 +38,43 @@ const DocumentThumbnails = ({ contribuableId, className = "", canDelete = true }
         .eq('contribuable_id', contribuableId);
 
       if (error) throw error;
-      setDocuments(data || []);
+
+      let docs = data || [];
+
+      // Backfill auto: si la table est vide mais des fichiers existent dans le bucket
+      if (docs.length === 0) {
+        const { data: files, error: listError } = await supabase.storage
+          .from('contribuables-documents')
+          .list(contribuableId);
+
+        if (!listError && files && files.length > 0) {
+          const rows = files.map((f) => ({
+            contribuable_id: contribuableId,
+            nom_fichier: f.name,
+            chemin_fichier: `${contribuableId}/${f.name}`,
+            type_document: 'autre' as any,
+          }));
+
+          const { error: insertError } = await supabase
+            .from('documents')
+            .insert(rows);
+
+          if (!insertError) {
+            const { data: reloaded } = await supabase
+              .from('documents')
+              .select('*')
+              .eq('contribuable_id', contribuableId);
+            docs = reloaded || [];
+
+            toast({
+              title: "Documents indexés",
+              description: `${files.length} fichier(s) synchronisé(s) depuis le stockage.`,
+            });
+          }
+        }
+      }
+
+      setDocuments(docs);
     } catch (error) {
       console.error('Erreur lors du chargement des documents:', error);
       toast({

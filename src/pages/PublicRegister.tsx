@@ -64,7 +64,7 @@ const PublicRegister = () => {
               contribuable_id: newContribuable.id,
               nom_fichier: file.name,
               chemin_fichier: fileName,
-              type_document: fileExt || 'autre',
+              type_document: 'autre',
               taille_fichier: file.size
             });
         }
