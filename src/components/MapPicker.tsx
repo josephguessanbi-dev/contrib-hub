@@ -257,6 +257,14 @@ const MapPicker: React.FC<MapPickerProps> = ({
     }
   };
 
+  const openDirections = () => {
+    if (!position) return;
+    
+    // Ouvre Google Maps avec l'itinéraire vers les coordonnées sélectionnées
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${position[0]},${position[1]}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <Card className="overflow-hidden">
       <div className="p-4 space-y-3">
@@ -298,6 +306,18 @@ const MapPicker: React.FC<MapPickerProps> = ({
             >
               <MapPin className="h-4 w-4" />
               POI
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={openDirections}
+              disabled={!position}
+              className="gap-2"
+              title="Ouvrir l'itinéraire dans Google Maps"
+            >
+              <Navigation className="h-4 w-4" />
+              Itinéraire
             </Button>
           </div>
         </div>
