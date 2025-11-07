@@ -40,13 +40,24 @@ const DashboardLayout = ({ children, user, onLogout, activeView = "dashboard", o
       <div className="w-64 bg-card border-r border-border flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-border">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">TC</span>
-            </div>
-            <div>
-              <h2 className="font-bold text-foreground">TaxContrib</h2>
-              <p className="text-xs text-muted-foreground">Gestion des contribuables</p>
+          <div className="flex flex-col space-y-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.history.back()}
+              className="w-fit gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Retour
+            </Button>
+            <div className="flex items-center space-x-3">
+              <img src="/logo.png" alt="Le Royaume CGA" className="h-10 w-10 object-contain rounded-xl" />
+              <div>
+                <h2 className="font-bold text-foreground">Le Royaume CGA</h2>
+                <p className="text-xs text-muted-foreground">Gestion des contribuables</p>
+              </div>
             </div>
           </div>
         </div>
