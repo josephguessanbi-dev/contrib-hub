@@ -117,12 +117,6 @@ const AuthPage = () => {
             </TabsList>
             
             <TabsContent value="login" className="space-y-4 mt-6">
-              <div className="text-center mb-4">
-                <Badge variant="outline" className="text-xs">
-                  Admin: ninopaket@gmail.com
-                </Badge>
-              </div>
-              
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>

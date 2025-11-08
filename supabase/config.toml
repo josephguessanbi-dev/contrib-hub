@@ -1,1 +1,4 @@
 project_id = "qstqqvmacdqlfeajnccu"
+
+[functions.public-register]
+verify_jwt = false

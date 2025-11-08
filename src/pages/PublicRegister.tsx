@@ -17,29 +17,22 @@ const PublicRegister = () => {
     try {
       const { documents, ...contribuableData } = data;
       
-      // Organisation par défaut pour les inscriptions publiques
-      const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
-      
-      // Insérer le contribuable avec statut "en_attente"
-      const { data: newContribuable, error: contribuableError } = await supabase
-        .from('contribuables')
-        .insert({
-          ...contribuableData,
-          organisation_id: DEFAULT_ORG_ID,
-          statut: 'en_attente'
-        })
-        .select()
-        .single();
+      // Call rate-limited edge function
+      const { data: registrationResult, error: registrationError } = await supabase.functions.invoke('public-register', {
+        body: { contribuableData }
+      });
 
-      if (contribuableError) {
-        console.error('Erreur contribuable:', contribuableError);
+      if (registrationError || registrationResult?.error) {
+        console.error('Erreur inscription:', registrationError || registrationResult?.error);
         toast({
           title: "Erreur",
-          description: "Impossible d'enregistrer votre demande. Veuillez réessayer.",
+          description: registrationResult?.error || "Impossible d'enregistrer votre demande. Veuillez réessayer.",
           variant: "destructive"
         });
         return;
       }
+
+      const newContribuable = { id: registrationResult.contribuableId };
 
       // Uploader les documents si présents
       if (documents && documents.length > 0) {
