@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { FileDown } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Employee {
   id: string;
@@ -142,6 +145,68 @@ const EmployeesList = ({ userRole, onEdit, onRefresh }: EmployeesListProps) => {
     );
   };
 
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    // Titre
+    doc.setFontSize(18);
+    doc.text("Liste des Employés", 14, 20);
+    
+    // Date d'export
+    doc.setFontSize(10);
+    doc.text(`Export du ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR")}`, 14, 28);
+    
+    // Statistiques
+    const admins = filteredEmployees.filter(e => e.role === 'admin').length;
+    const staff = filteredEmployees.filter(e => e.role === 'personnel').length;
+    doc.text(`Total: ${filteredEmployees.length} employés (${admins} admins, ${staff} staff)`, 14, 35);
+    
+    // Préparer les données pour le tableau
+    const tableData = filteredEmployees.map(employee => [
+      employee.nom,
+      employee.email,
+      employee.numeroTravail || '-',
+      employee.role === 'admin' ? 'Administrateur' : 'Personnel',
+      employee.statut === 'actif' ? 'Actif' : employee.statut === 'inactif' ? 'Inactif' : 'Suspendu',
+      new Date(employee.created_at).toLocaleDateString("fr-FR")
+    ]);
+    
+    // Générer le tableau
+    autoTable(doc, {
+      startY: 42,
+      head: [['Nom', 'Email', 'N° Travail', 'Rôle', 'Statut', 'Date création']],
+      body: tableData,
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      columnStyles: {
+        0: { cellWidth: 35 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 30 },
+      },
+    });
+    
+    // Sauvegarder le PDF
+    doc.save(`employes_${new Date().toISOString().split('T')[0]}.pdf`);
+    
+    toast({
+      title: "Export réussi",
+      description: "La liste des employés a été exportée en PDF",
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* En-tête avec filtres */}
@@ -155,6 +220,15 @@ const EmployeesList = ({ userRole, onEdit, onRefresh }: EmployeesListProps) => {
                 {filteredEmployees.length} employé{filteredEmployees.length > 1 ? 's' : ''}
               </Badge>
             </CardTitle>
+            <Button
+              onClick={exportToPDF}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              Exporter en PDF
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

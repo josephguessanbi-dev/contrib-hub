@@ -8,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import TaxpayerDetail from "./TaxpayerDetail";
 import DocumentThumbnails from "./DocumentThumbnails";
+import { FileDown } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Taxpayer {
   id: string;
@@ -215,6 +218,72 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
     }
   };
 
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    // Titre
+    doc.setFontSize(18);
+    doc.text("Liste des Contribuables", 14, 20);
+    
+    // Date d'export
+    doc.setFontSize(10);
+    doc.text(`Export du ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR")}`, 14, 28);
+    
+    // Statistiques
+    doc.text(`Total: ${filteredTaxpayers.length} contribuables`, 14, 35);
+    
+    // Préparer les données pour le tableau
+    const tableData = filteredTaxpayers.map(taxpayer => [
+      taxpayer.raison_sociale,
+      `${taxpayer.prenom_gerant} ${taxpayer.nom_gerant}`,
+      taxpayer.ville,
+      taxpayer.commune,
+      taxpayer.contact_1,
+      taxpayer.rccm || '-',
+      taxpayer.ncc || '-',
+      taxpayer.statut === "en_attente" ? "En attente" : taxpayer.statut === "valide" ? "Validé" : "Rejeté",
+      new Date(taxpayer.created_at).toLocaleDateString("fr-FR")
+    ]);
+    
+    // Générer le tableau
+    autoTable(doc, {
+      startY: 42,
+      head: [['Raison Sociale', 'Gérant', 'Ville', 'Commune', 'Contact', 'RCCM', 'NCC', 'Statut', 'Date']],
+      body: tableData,
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 22 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 20 },
+        7: { cellWidth: 20 },
+        8: { cellWidth: 20 },
+      },
+    });
+    
+    // Sauvegarder le PDF
+    doc.save(`contribuables_${new Date().toISOString().split('T')[0]}.pdf`);
+    
+    toast({
+      title: "Export réussi",
+      description: "La liste des contribuables a été exportée en PDF",
+    });
+  };
+
   const filteredTaxpayers = taxpayers.filter(taxpayer => {
     const matchesSearch = taxpayer.raison_sociale.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          taxpayer.nom_gerant.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -253,6 +322,14 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
             <SelectItem value="rejete">Rejeté</SelectItem>
           </SelectContent>
         </Select>
+        <Button
+          onClick={exportToPDF}
+          variant="outline"
+          className="gap-2"
+        >
+          <FileDown className="h-4 w-4" />
+          Exporter en PDF
+        </Button>
       </div>
 
       <div className="grid gap-4">
