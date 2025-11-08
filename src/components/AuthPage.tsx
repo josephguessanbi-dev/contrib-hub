@@ -81,8 +81,23 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col p-4">
+      <div className="p-4 animate-fade-in">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.history.back()}
+          className="gap-2 hover:scale-105 transition-transform"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Retour
+        </Button>
+      </div>
+      
+      <div className="flex-1 flex items-center justify-center">
+        <Card className="w-full max-w-md">
         <CardHeader className="text-center pb-4">
           <div className="w-16 h-16 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center mx-auto mb-4">
             <span className="text-primary-foreground font-bold text-xl">TC</span>
@@ -193,6 +208,7 @@ const AuthPage = () => {
           </Tabs>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };
