@@ -148,12 +148,6 @@ const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
             {isLoading ? "Connexion..." : "Se connecter"}
           </Button>
         </form>
-        
-        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-          <p className="text-sm text-muted-foreground mb-2">Compte admin par défaut:</p>
-          <p className="text-xs font-mono">ninopaket@gmail.com</p>
-          <p className="text-xs font-mono">32722260</p>
-        </div>
       </CardContent>
     </Card>
   );

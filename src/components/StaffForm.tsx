@@ -1,11 +1,23 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
+const staffSchema = z.object({
+  nom: z.string().trim().min(1, "Le nom est requis").max(100, "Le nom ne peut pas dépasser 100 caractères"),
+  email: z.string().trim().email("Email invalide").max(255, "L'email ne peut pas dépasser 255 caractères"),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères").max(100),
+  numeroTravail: z.string().trim().min(1, "Le numéro de travail est requis").max(50, "Le numéro ne peut pas dépasser 50 caractères"),
+  role: z.enum(["admin", "personnel"], { required_error: "Veuillez sélectionner un rôle" })
+});
 
 interface StaffFormData {
   nom: string;
@@ -22,32 +34,34 @@ interface StaffFormProps {
 }
 
 const StaffForm = ({ onSubmit, onCancel, organisationId }: StaffFormProps) => {
-  const [formData, setFormData] = useState<StaffFormData>({
-    nom: "",
-    email: "",
-    password: "",
-    numero_travail: "",
-    role: "personnel"
-  });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  
+  const form = useForm<z.infer<typeof staffSchema>>({
+    resolver: zodResolver(staffSchema),
+    defaultValues: {
+      nom: "",
+      email: "",
+      password: "",
+      numeroTravail: "",
+      role: "personnel"
+    }
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFormSubmit = async (values: z.infer<typeof staffSchema>) => {
     setIsLoading(true);
 
     try {
-      // Créer l'utilisateur avec Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+        email: values.email,
+        password: values.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
-            nom: formData.nom,
-            numero_travail: formData.numero_travail,
+            nom: values.nom,
+            numero_travail: values.numeroTravail,
             organisation_id: organisationId,
-            role: formData.role
+            role: values.role
           }
         }
       });
@@ -61,24 +75,21 @@ const StaffForm = ({ onSubmit, onCancel, organisationId }: StaffFormProps) => {
         return;
       }
 
-      // Si l'utilisateur est créé avec succès
       if (authData.user) {
-        // Créer le profil directement (si le trigger ne fonctionne pas)
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
             user_id: authData.user.id,
-            nom: formData.nom,
-            numero_travail: formData.numero_travail,
+            nom: values.nom,
+            numero_travail: values.numeroTravail,
             organisation_id: organisationId
           });
 
-        // Assigner le rôle
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
             user_id: authData.user.id,
-            role: formData.role,
+            role: values.role,
             organisation_id: organisationId
           });
 
@@ -88,13 +99,18 @@ const StaffForm = ({ onSubmit, onCancel, organisationId }: StaffFormProps) => {
 
         toast({
           title: "Agent ajouté",
-          description: "L'agent du staff a été créé avec succès. Un email de confirmation a été envoyé."
+          description: "L'agent du staff a été créé avec succès."
         });
 
-        onSubmit(formData);
+        onSubmit({ 
+          nom: values.nom,
+          email: values.email,
+          password: values.password,
+          numero_travail: values.numeroTravail,
+          role: values.role
+        });
       }
     } catch (error) {
-      console.error("Erreur:", error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la création de l'agent",
@@ -105,13 +121,6 @@ const StaffForm = ({ onSubmit, onCancel, organisationId }: StaffFormProps) => {
     }
   };
 
-  const handleInputChange = (field: keyof StaffFormData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
@@ -120,86 +129,105 @@ const StaffForm = ({ onSubmit, onCancel, organisationId }: StaffFormProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nom">Nom complet *</Label>
-            <Input
-              id="nom"
-              type="text"
-              placeholder="Ex: Jean Dupont"
-              value={formData.nom}
-              onChange={(e) => handleInputChange("nom", e.target.value)}
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="nom"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom complet *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Jean Dupont" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Ex: jean.dupont@example.com"
-              value={formData.email}
-              onChange={(e) => handleInputChange("email", e.target.value)}
-              required
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email *</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="jean.dupont@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Mot de passe temporaire *</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Minimum 6 caractères"
-              value={formData.password}
-              onChange={(e) => handleInputChange("password", e.target.value)}
-              required
-              minLength={6}
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mot de passe *</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Minimum 8 caractères" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="numero_travail">Numéro de travail</Label>
-            <Input
-              id="numero_travail"
-              type="text"
-              placeholder="Ex: EMP001"
-              value={formData.numero_travail}
-              onChange={(e) => handleInputChange("numero_travail", e.target.value)}
+            <FormField
+              control={form.control}
+              name="numeroTravail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Numéro de travail *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: EMP001" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="role">Rôle *</Label>
-            <Select value={formData.role} onValueChange={(value: "admin" | "personnel") => handleInputChange("role", value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un rôle" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="personnel">Personnel</SelectItem>
-                <SelectItem value="admin">Administrateur</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rôle *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un rôle" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="personnel">Personnel</SelectItem>
+                      <SelectItem value="admin">Administrateur</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="flex space-x-4 pt-4">
-            <Button 
-              type="submit" 
-              className="flex-1 bg-gradient-to-r from-primary to-primary/90"
-              disabled={isLoading}
-            >
-              {isLoading ? "Création..." : "Créer l'agent"}
-            </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onCancel}
-              disabled={isLoading}
-            >
-              Annuler
-            </Button>
-          </div>
-        </form>
+            <div className="flex space-x-4 pt-4">
+              <Button 
+                type="submit" 
+                className="flex-1 bg-gradient-to-r from-primary to-primary/90"
+                disabled={isLoading}
+              >
+                {isLoading ? "Création..." : "Créer l'agent"}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onCancel}
+                disabled={isLoading}
+              >
+                Annuler
+              </Button>
+            </div>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );
