@@ -122,43 +122,45 @@ const AdminDashboard = ({ admin, onLogout }: AdminDashboardProps) => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card border-b border-border">
-        <div className="px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.history.back()}
-              className="gap-2 hover:bg-primary/10 transition-all"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Retour
-            </Button>
-            <div className="w-10 h-10 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">TC</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">TaxContrib Admin</h1>
-              <p className="text-sm text-muted-foreground">Tableau de bord administrateur</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
-              <Avatar>
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {admin.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-right">
-                <p className="text-sm font-medium text-foreground">{admin.name}</p>
-                <Badge variant="destructive" className="text-xs">Administrateur</Badge>
+        <div className="px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.history.back()}
+                className="gap-2 hover:bg-primary/10 transition-all shrink-0"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Retour
+              </Button>
+              <div className="w-10 h-10 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center shrink-0">
+                <span className="text-primary-foreground font-bold">TC</span>
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="text-xl font-bold text-foreground">TaxContrib Admin</h1>
+                <p className="text-sm text-muted-foreground">Tableau de bord administrateur</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={onLogout}>
-              Déconnexion
-            </Button>
+            
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="flex items-center gap-3">
+                <Avatar className="shrink-0">
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {admin.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{admin.name}</p>
+                  <Badge variant="destructive" className="text-xs">Administrateur</Badge>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={onLogout} className="shrink-0">
+                Déconnexion
+              </Button>
+            </div>
           </div>
         </div>
 

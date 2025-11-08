@@ -16,19 +16,21 @@ const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
         <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
       </div>
       
-      <header className="relative p-4 flex items-center gap-4 animate-fade-in">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => window.history.back()}
-          className="gap-2 hover:scale-105 transition-transform"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Retour
-        </Button>
-        <img src="/logo.png" alt="Le Royaume CGA" className="h-12 object-contain" />
+      <header className="relative p-4 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.history.back()}
+            className="gap-2 hover:scale-105 transition-transform"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Retour
+          </Button>
+          <img src="/logo.png" alt="Le Royaume CGA" className="h-12 object-contain" />
+        </div>
       </header>
       
       <div className="flex-1 flex items-center justify-center p-4 relative">

@@ -189,52 +189,54 @@ const StaffDashboard = ({ user, onLogout }: StaffDashboardProps) => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card border-b border-border">
-        <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.history.back()}
-              className="gap-2 hover:bg-primary/10 transition-all"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Retour
-            </Button>
-            <div className="w-10 h-10 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center shrink-0">
-              <span className="text-primary-foreground font-bold">TC</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">TaxContrib</h1>
-              <p className="text-sm text-muted-foreground">
-                {userProfile?.role === 'admin' ? 'Administration' : 'Interface Personnel'}
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
-            <div className="hidden sm:flex items-center space-x-3">
-              <Avatar>
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {userProfile?.nom.charAt(0).toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-right">
-                <p className="text-sm font-medium text-foreground">{userProfile?.nom || 'Utilisateur'}</p>
-                <div className="flex items-center space-x-2">
-                  <Badge variant={userProfile?.role === 'admin' ? "destructive" : "secondary"} className="text-xs">
-                    {userProfile?.role === 'admin' ? 'Admin' : 'Staff'}
-                  </Badge>
-                  {userProfile?.numero_travail && (
-                    <span className="text-xs text-muted-foreground">#{userProfile.numero_travail}</span>
-                  )}
-                </div>
+        <div className="px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.history.back()}
+                className="gap-2 hover:bg-primary/10 transition-all shrink-0"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Retour
+              </Button>
+              <div className="w-10 h-10 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center shrink-0">
+                <span className="text-primary-foreground font-bold">TC</span>
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="text-xl font-bold text-foreground">TaxContrib</h1>
+                <p className="text-sm text-muted-foreground">
+                  {userProfile?.role === 'admin' ? 'Administration' : 'Interface Personnel'}
+                </p>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={handleLogout} className="ml-auto sm:ml-0">
-              Déconnexion
-            </Button>
+            
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="flex items-center gap-3">
+                <Avatar className="shrink-0">
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {userProfile?.nom.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{userProfile?.nom || 'Utilisateur'}</p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={userProfile?.role === 'admin' ? "destructive" : "secondary"} className="text-xs">
+                      {userProfile?.role === 'admin' ? 'Admin' : 'Staff'}
+                    </Badge>
+                    {userProfile?.numero_travail && (
+                      <span className="text-xs text-muted-foreground">#{userProfile.numero_travail}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="shrink-0">
+                Déconnexion
+              </Button>
+            </div>
           </div>
         </div>
 

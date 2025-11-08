@@ -98,32 +98,33 @@ const PublicRegister = () => {
 
       {/* Header */}
       <div className="relative glass-effect shadow-xl">
-        <div className="max-w-7xl mx-auto px-6 py-5">
-          <div className="flex items-center justify-between animate-fade-in">
-            <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-in">
+            <div className="flex items-center gap-3 sm:gap-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => window.history.back()}
-                className="gap-2 hover:bg-primary/10 transition-all hover:scale-105"
+                className="gap-2 hover:bg-primary/10 transition-all hover:scale-105 shrink-0"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
                 Retour
               </Button>
-              <div className="relative">
-                <img src="/logo.png" alt="Le Royaume CGA" className="h-14 object-contain" />
+              <div className="relative shrink-0">
+                <img src="/logo.png" alt="Le Royaume CGA" className="h-12 sm:h-14 object-contain" />
               </div>
-              <div>
-                <h1 className="text-2xl font-heading font-bold gradient-text">Le Royaume CGA</h1>
+              <div className="hidden sm:block">
+                <h1 className="text-xl sm:text-2xl font-heading font-bold gradient-text">Le Royaume CGA</h1>
                 <p className="text-xs text-muted-foreground">Gestion des contribuables</p>
               </div>
             </div>
             <Button 
               variant="outline"
+              size="sm"
               onClick={() => window.location.href = "/"}
-              className="hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 hover:border-primary/50 transition-all duration-300 hover:scale-105"
+              className="hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 hover:border-primary/50 transition-all duration-300 hover:scale-105 shrink-0 w-full sm:w-auto"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />

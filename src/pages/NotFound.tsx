@@ -16,14 +16,16 @@ const NotFound = () => {
         <div className="absolute bottom-20 left-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '1.5s' }}></div>
       </div>
       
-      <header className="relative p-4 flex items-center gap-4 animate-fade-in">
-        <a href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all hover:scale-105">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Retour
-        </a>
-        <img src="/logo.png" alt="Le Royaume CGA" className="h-12 object-contain" />
+      <header className="relative p-4 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <a href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all hover:scale-105">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Retour
+          </a>
+          <img src="/logo.png" alt="Le Royaume CGA" className="h-12 object-contain" />
+        </div>
       </header>
       
       <div className="flex-1 flex items-center justify-center relative">
