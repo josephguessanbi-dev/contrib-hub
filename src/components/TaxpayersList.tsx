@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import TaxpayerDetail from "./TaxpayerDetail";
-import DocumentThumbnails from "./DocumentThumbnails";
 import { FileDown } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -332,102 +331,100 @@ const TaxpayersList = ({ userRole, onValidate, onReject, onEdit, onDelete }: Tax
         </Button>
       </div>
 
-      <div className="grid gap-4">
-        {filteredTaxpayers.map((taxpayer) => (
-          <Card key={taxpayer.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-lg">{taxpayer.raison_sociale}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Gérant: {taxpayer.prenom_gerant} {taxpayer.nom_gerant}
-                  </p>
-                </div>
-                {getStatusBadge(taxpayer.statut)}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
+      <Card>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/50">
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground">Raison Sociale</th>
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground">Gérant</th>
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Ville</th>
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground hidden lg:table-cell">Contact</th>
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground hidden lg:table-cell">RCCM</th>
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground">Statut</th>
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Date</th>
+                <th className="text-right p-3 text-xs font-semibold text-muted-foreground">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTaxpayers.map((taxpayer) => (
+                <tr key={taxpayer.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+                  <td className="p-3">
                     <div>
-                      <p className="text-xs text-muted-foreground">Ville</p>
-                      <p className="font-medium">{taxpayer.ville}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Contact</p>
-                      <p className="font-medium">{taxpayer.contact_1}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">RCCM</p>
-                      <p className="font-medium">{taxpayer.rccm || 'Non renseigné'}</p>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">Documents</p>
-                  <DocumentThumbnails contribuableId={taxpayer.id} />
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-2 justify-between items-center">
-                <div className="flex flex-col space-y-1">
-                  <div className="text-xs text-muted-foreground">
-                    Enregistré le {new Date(taxpayer.created_at).toLocaleDateString("fr-FR")}
-                  </div>
-                  {taxpayer.creator && (
-                    <div className="text-xs text-muted-foreground">
-                      Par: <span className="font-medium text-foreground">{taxpayer.creator.nom}</span>
-                      {taxpayer.creator.email && (
-                        <span className="ml-1">({taxpayer.creator.email})</span>
+                      <p className="font-medium text-foreground">{taxpayer.raison_sociale}</p>
+                      {taxpayer.creator && (
+                        <p className="text-xs text-muted-foreground">Par: {taxpayer.creator.nom}</p>
                       )}
                     </div>
-                  )}
-                </div>
-                
-                <div className="flex gap-2">
-                  {userRole === "admin" && taxpayer.statut === "en_attente" && (
-                    <>
+                  </td>
+                  <td className="p-3">
+                    <p className="text-sm text-foreground">{taxpayer.prenom_gerant} {taxpayer.nom_gerant}</p>
+                  </td>
+                  <td className="p-3 hidden md:table-cell">
+                    <p className="text-sm text-foreground">{taxpayer.ville}</p>
+                    <p className="text-xs text-muted-foreground">{taxpayer.commune}</p>
+                  </td>
+                  <td className="p-3 hidden lg:table-cell">
+                    <p className="text-sm text-foreground">{taxpayer.contact_1}</p>
+                  </td>
+                  <td className="p-3 hidden lg:table-cell">
+                    <p className="text-sm text-foreground">{taxpayer.rccm || '-'}</p>
+                  </td>
+                  <td className="p-3">
+                    {getStatusBadge(taxpayer.statut)}
+                  </td>
+                  <td className="p-3 hidden md:table-cell">
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(taxpayer.created_at).toLocaleDateString("fr-FR")}
+                    </p>
+                  </td>
+                  <td className="p-3">
+                    <div className="flex gap-1 justify-end flex-wrap">
+                      {userRole === "admin" && taxpayer.statut === "en_attente" && (
+                        <>
+                          <Button 
+                            size="sm" 
+                            className="bg-success text-success-foreground hover:bg-success/90 h-7 text-xs"
+                            onClick={() => handleValidate(taxpayer.id)}
+                          >
+                            Valider
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            className="h-7 text-xs"
+                            onClick={() => handleReject(taxpayer.id)}
+                          >
+                            Rejeter
+                          </Button>
+                        </>
+                      )}
                       <Button 
                         size="sm" 
-                        className="bg-success text-success-foreground hover:bg-success/90"
-                        onClick={() => handleValidate(taxpayer.id)}
+                        variant="outline"
+                        className="h-7 text-xs"
+                        onClick={() => setSelectedTaxpayerId(taxpayer.id)}
                       >
-                        Valider
+                        Détails
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="destructive"
-                        onClick={() => handleReject(taxpayer.id)}
-                      >
-                        Rejeter
-                      </Button>
-                    </>
-                  )}
-                  
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => setSelectedTaxpayerId(taxpayer.id)}
-                  >
-                    Voir détails
-                  </Button>
-                  
-                  {userRole === "admin" && (
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleDelete(taxpayer.id)}
-                    >
-                      Supprimer
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                      {userRole === "admin" && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="h-7 text-xs text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={() => handleDelete(taxpayer.id)}
+                        >
+                          Suppr.
+                        </Button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       {filteredTaxpayers.length === 0 && (
         <Card className="text-center py-12">
